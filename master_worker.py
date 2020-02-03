@@ -223,15 +223,15 @@ class MasterWorker:
 
   def initialize_optimization_plots(self):
     """Initializes the plots that keeps track of this optimization job's progress"""
-    self.__initialize_figure()
-    self.__make_plots()
+    self.initialize_figure()
+    self.make_plots()
 
-  def __initialize_figure(self):
+  def initialize_figure(self):
     """Initializes the figure for plotting optimization information"""
     self.fig = plt.figure(figsize=[18, 5])
     plt.ion()
 
-  def __make_plots(self):
+  def make_plots(self):
     """Sets up the plots for visualizing progress of PSO"""
     # Plot the global convergence (best error over time).
     self.global_convergence_ax = self.fig.add_subplot(151)
