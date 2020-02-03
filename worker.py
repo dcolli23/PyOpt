@@ -127,7 +127,7 @@ class Worker:
     self.p_value_history = [[obj.p_value] for obj in self.p_objs]
 
     # Make the plots for optimization bookkeeping.
-    if self.display_progress: self.make_plots()
+    if self.display_progress: self.initialize_optimization_figure()
 
     # Delete the previous dumps if they're present.
     files_to_delete = ["parameter_history.txt", "p_history.txt", "errors.txt"]
@@ -433,11 +433,18 @@ class Worker:
     # Tidy up.
     f.close()
 
+  def initialize_optimization_figure(self):
+    """Initializes the figure and starts plots for optimization plotting"""
+    self.initialize_figure()
+    self.make_plots()
+
+  def initialize_figure(self):
+    """Initializes the figure used to show optimization progress"""
+    self.fig = plt.figure(figsize=[9, 5])
+    plt.ion()
+
   def make_plots(self):
     """Makes interactive plots for the convergence and best fit."""
-    # Make a figure that we'll update based on optimization progress.
-    self.fig = plt.figure(figsize=[9,5])
-    plt.ion()
     plt.tight_layout()
 
     self.convergence_ax = self.fig.add_subplot(131)

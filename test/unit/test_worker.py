@@ -34,23 +34,23 @@ def test_worker_direct_initialization():
   w = worker.Worker(**WORKER_DICT)
   assert (w)
 
-# def test_worker_fig_initialization():
-#   """Tests the initialization of a Worker's figure"""
-#   # Monkey-patch the Worker's figure and plot initialization to make sure they're called.
-#   def initialize_figure(self):
-#     self.figure_method_called = True
-#   def make_plots(self):
-#     self.plot_method_called = True
+def test_worker_fig_initialization():
+  """Tests the initialization of a Worker's figure"""
+  # Monkey-patch the Worker's figure and plot initialization to make sure they're called.
+  def initialize_figure(self):
+    self.figure_method_called = True
+  def make_plots(self):
+    self.plot_method_called = True
   
-#   this_w_dict = copy.copy(WORKER_DICT)
-#   this_w_dict["display_progress"] = True
+  this_w_dict = copy.copy(WORKER_DICT)
+  this_w_dict["display_progress"] = True
   
-#   worker.Worker.initialize_figure = initialize_figure
-#   worker.Worker.make_plots = make_plots
-#   worker.Worker.figure_method_called = False
-#   worker.Worker.plot_method_called = False
+  worker.Worker.initialize_figure = initialize_figure
+  worker.Worker.make_plots = make_plots
+  worker.Worker.figure_method_called = False
+  worker.Worker.plot_method_called = False
 
-#   w = worker.MasterWorker(**this_w_dict)
+  w = worker.Worker(**this_w_dict)
 
-#   assert (w.figure_method_called), "Figure method was not called!"
-#   assert (w.plot_method_called), "Make plot method was not called!"
+  assert (w.figure_method_called), "Figure method was not called!"
+  assert (w.plot_method_called), "Make plot method was not called!"
