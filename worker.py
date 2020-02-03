@@ -16,7 +16,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from . import params
-sys.path.append("../")
+print ("WARNING: Currently relying on FiberSim repository outside of this repository. Refactor!!")
+sys.path.append("../../Models/FiberSim/Python_files/")
 from util import run, instruct, protocol
 
 class Worker:
@@ -35,6 +36,43 @@ class Worker:
                time_steps_to_steady_state=2500,
                compute_rolling_average=False,
                display_progress=True):
+    """Initializes a MasterWorker object
+    
+    Parameters
+    ----------
+    fibersim_file_string : str
+        The file path to the FiberSim executable.
+    protocol_file_string : str
+        The file path to the protocol file for this simulation.
+    options_file_string : str
+        The file path to the options file.
+    fit_mode : str
+        The fit mode for this simulation. Currently only accepts "time".
+    fit_variable : str
+        The variable that is being fit in this optimization job. Currently only accepts 
+        "muscle_force".
+    original_json_model_file_string : str
+        The file path to the original JSON model file.
+    working_json_model_file_string: str
+        The file path to the model file that is used to inform the current simulation.
+    best_model_file_string : str
+        The file path to where the best model file will be saved.
+    optimization_json_template_string : str
+        The file path to the optimization template, where the initial p-values are stored.
+    output_dir_string : str
+        The path to the output directory for this simulation.
+    target_data_string : str
+        The file path to the target data. Must be in a two column format where the first column is
+        the time and the second column is the data for the `fit_variable`. 
+        Note:: The time column for this must currently be in 1 millisecond increments.
+    time_steps_to_steady_state : int, optional
+        The number of time steps it takes for FiberSim to reach steady state, by default 2500.
+    compute_rolling_average : bool, optional
+        Whether or not to compute a rolling average to smooth out any stochasticity, by default 
+        False.
+    display_progress : bool, optional
+        Whether to display the progress using multiple matplotlib plots, by default True.
+    """
     self.fibersim_file_string = fibersim_file_string
     self.protocol_file_string = protocol_file_string
     self.options_file_string = options_file_string
@@ -151,6 +189,8 @@ class Worker:
       if not np.isclose(self.time_step, 0.001):
         # raise RuntimeError("Time step other than 1 millisecond not supported!")
         print ("WARNING: TIME STEPS OTHER THAN 1 MILLISECOND NOT SUPPORTED!")
+    else:
+      raise RuntimeError("Fit variable not recognized!!")
     
     # Linearly interpolate the target data according to the simulation time steps.
     times_to_interpolate = (np.asarray(self.sim_times[self.time_steps_to_steady_state:])
@@ -283,8 +323,6 @@ class Worker:
           "min_value for parameter \"{}\" in optimization template must be a number!".format(key))
         assert (isinstance(p_max, (int, float))), (
           "max_value for parameter \"{}\" in optimization template must be a number!".format(key))
-        # assert (p_min < p_max), (
-        #   "min_value for parameter \"{}\" must be less than max_value!".format(key))
 
         # Store the values for this parameter.
         self.p_objs.append( params.ParamObject(p_min, p_max, p_value, p_mode, param_path) )

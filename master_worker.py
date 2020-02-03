@@ -35,6 +35,46 @@ class MasterWorker:
                compute_rolling_average=False,
                display_progress=True,
                plot_animation_string="./plot_animation.mp4"):
+    """Initializes a MasterWorker object
+    
+    Parameters
+    ----------
+    fibersim_file_string : str
+        The file path to the FiberSim executable.
+    protocol_file_string : str
+        The file path to the protocol file for this simulation.
+    options_file_string : str
+        The file path to the options file.
+    fit_mode : str
+        The fit mode for this simulation. Currently only accepts "time".
+    fit_variable : str
+        The variable that is being fit in this optimization job. Currently only accepts 
+        "muscle_force".
+    original_json_model_file_string : str
+        The file path to the original JSON model file.
+    best_model_file_string : str
+        The file path to where the best model file will be saved.
+    optimization_json_template_string : str
+        The file path to the optimization template, where the initial p-values are stored.
+    output_dir_string : str
+        The path to the output directory for this simulation.
+    target_data_string : str
+        The file path to the target data. Must be in a two column format where the first column is
+        the time and the second column is the data for the `fit_variable`. 
+        Note:: The time column for this must currently be in 1 millisecond increments.
+    n_workers : int
+        The number of workers used in this particle swarm optimization.
+    time_steps_to_steady_state : int, optional
+        The number of time steps it takes for FiberSim to reach steady state, by default 2500.
+    compute_rolling_average : bool, optional
+        Whether or not to compute a rolling average to smooth out any stochasticity, by default 
+        False.
+    display_progress : bool, optional
+        Whether to display the progress using multiple matplotlib plots, by default True.
+    plot_animation_string : str, optional
+        The file string for the output optimization animation showing progress, by default 
+        "./plot_animation.mp4".
+    """
     self.fibersim_file_string = fibersim_file_string
     self.protocol_file_string = protocol_file_string
     self.options_file_string = options_file_string
@@ -329,8 +369,19 @@ class MasterWorker:
     self.fig.canvas.flush_events()
 
 
-def from_dict(template_dict, n_workers):
-  """Initializes a master worker (and subsequently all workers) from supplied dictionary."""
+def from_dict(template_dict):
+  """Initializes a MasterWorker (and subsequently all workers) from supplied dictionary
+  
+  Parameters
+  ----------
+  template_dict : dict
+      The dict that supplies the necessary arguments to the MasterWorker.__init__ function.
+  
+  Returns
+  -------
+  MasterWorker
+      The MasterWorker instance.
+  """
   mw = MasterWorker(
     fibersim_file_string = template_dict["fibersim_file_string"],
     protocol_file_string = template_dict["protocol_file_string"],
@@ -342,7 +393,7 @@ def from_dict(template_dict, n_workers):
     optimization_json_template_string = template_dict["optimization_json_template_string"],
     output_dir_string = template_dict["output_dir_string"],
     target_data_string = template_dict["target_data_string"],
-    n_workers = n_workers,
+    n_workers = template_dict["n_workers"],
     time_steps_to_steady_state = template_dict["time_steps_to_steady_state"],
     compute_rolling_average = template_dict["compute_rolling_average"]
   )
