@@ -101,13 +101,21 @@ class MasterWorker:
     self.error_values = []
     self.best_error_values = []
 
-    # Create a copy of this class (in dictionary form) so we can create the workers from this new
-    # dictionary.
-    worker_dict = self.__dict__.copy()
-
-    # Turn off the individual worker's display of progress since we don't want n_workers graphs on
-    # the screen.
-    worker_dict["display_progress"] = False
+    # Create a the dictionary we'll use to initialize all of our workers.
+    worker_dict = {
+      "fibersim_file_string":fibersim_file_string,
+      "protocol_file_string":protocol_file_string,
+      "options_file_string":options_file_string,
+      "fit_mode":fit_mode,
+      "fit_variable":fit_variable,
+      "original_json_model_file_string":original_json_model_file_string,
+      "best_model_file_string":best_model_file_string,
+      "optimization_json_template_string":optimization_json_template_string,
+      "target_data_string":target_data_string,
+      "time_steps_to_steady_state":time_steps_to_steady_state,
+      "compute_rolling_average":compute_rolling_average,
+      "display_progress":False
+    }
 
     # Create the list where we'll store all of the workers.
     self.workers = []
@@ -130,7 +138,7 @@ class MasterWorker:
         os.mkdir(worker_dict["output_dir_string"])
 
       # Initialize the worker.
-      worker_obj = worker.from_dict(worker_dict)
+      worker_obj = worker.Worker(**worker_dict)
 
       # Add the worker to our list of workers.
       self.workers.append(worker_obj)

@@ -34,11 +34,6 @@ def test_master_worker_direct_initialization():
   mw = master_worker.MasterWorker(**MASTER_WORKER_DICT)
   assert (mw)
 
-def test_master_worker_dict_initialization():
-  """Tests the initialization of a MasterWorker object from a dictionary"""
-  mw = master_worker.from_dict(MASTER_WORKER_DICT)
-  assert (mw)
-
 # def test_master_worker_fig_initialization(monkeypatch):
 #   """Tests the initialization of a MasterWorker's figure"""
 #   # Monkey-patch the MasterWorker's figure and plot initialization.

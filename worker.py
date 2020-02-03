@@ -525,27 +525,3 @@ class Worker:
     self.dump_param_information()
 
     if self.display_progress: self.update_plots()
-
-def from_dict(template_dict):
-  """Constructs a worker from the optimization template dictionary read in via JSON."""
-  # Specify some default behavior.
-  if "display_progress" not in template_dict.keys():
-    template_dict["display_progress"] = True
-
-  worker = Worker(
-    fibersim_file_string = template_dict["fibersim_file_string"],
-    protocol_file_string = template_dict["protocol_file_string"],
-    options_file_string = template_dict["options_file_string"],
-    fit_mode = template_dict["fit_mode"],
-    fit_variable = template_dict["fit_variable"],
-    original_json_model_file_string = template_dict["original_json_model_file_string"],
-    working_json_model_file_string = template_dict["working_json_model_file_string"],
-    best_model_file_string = template_dict["best_model_file_string"],
-    optimization_json_template_string = template_dict["optimization_json_template_string"],
-    output_dir_string = template_dict["output_dir_string"],
-    target_data_string = template_dict["target_data_string"],
-    time_steps_to_steady_state=template_dict["time_steps_to_steady_state"],
-    display_progress=template_dict["display_progress"]
-  )
-
-  return worker
