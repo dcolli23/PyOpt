@@ -1,6 +1,7 @@
 """Tests the MasterWorker initialization"""
 import os
 import sys
+import copy
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
 PYOPT_ROOT = os.path.join(ROOT, "..", "..")
@@ -37,3 +38,24 @@ def test_master_worker_dict_initialization():
   """Tests the initialization of a MasterWorker object from a dictionary"""
   mw = master_worker.from_dict(MASTER_WORKER_DICT)
   assert (mw)
+
+# def test_master_worker_fig_initialization(monkeypatch):
+#   """Tests the initialization of a MasterWorker's figure"""
+#   # Monkey-patch the MasterWorker's figure and plot initialization.
+#   def __initialize_figure(self):
+#     self.figure_method_called = True
+#   def __make_plots(self):
+#     self.plot_method_called = True
+  
+#   monkeypatch.setattr(master_worker.MasterWorker, "__initialize_figure", __initialize_figure)
+#   monkeypatch.setattr(master_worker.MasterWorker, "__make_plots", __make_plots)
+#   master_worker.MasterWorker.figure_method_called = False
+#   master_worker.MasterWorker.plot_method_called = False
+
+#   # Initialize the MasterWorker object.
+#   this_mw_dict = copy.copy(MASTER_WORKER_DICT)
+#   this_mw_dict["display_progress"] = True
+#   mw = master_worker.MasterWorker(**this_mw_dict)
+
+#   assert (mw.figure_method_called), "Figure initialization was not called!"
+#   assert (mw.plot_method_called), "Plot initialization was not called!"

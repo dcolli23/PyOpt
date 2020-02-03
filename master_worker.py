@@ -137,7 +137,7 @@ class MasterWorker:
     
     # Create the plot if we wish to visualize progress through the optimization task.
     if self.display_progress:
-      self.make_plots()
+      self.initialize_optimization_plots()
       optimization_plot_path = os.path.join(output_dir_string, "optimization_plot_movie.wmv")
       self.plot_writer = imageio.get_writer(optimization_plot_path, fps=2)
       
@@ -191,7 +191,7 @@ class MasterWorker:
       # Find the worker with the minimum error so we can plot this as the best fit.
       self.best_worker_index = np.argmin(this_iteration_error)
       best_worker = self.workers[self.best_worker_index]
-      self.update_fit_plot(best_worker)
+      self.__update_fit_plot(best_worker)
 
       # Append this new best error to the list of best errors.
       self.best_error_values.append(self.min_error_all_workers)
@@ -205,7 +205,7 @@ class MasterWorker:
 
     if self.display_progress:
       # Update the convergence and p-value plots.
-      self.update_plots()
+      self.__update_plots()
 
       # Save the plot snapshot.
       snapshot = du.get_img_from_fig(self.fig, dpi=180)
@@ -213,12 +213,18 @@ class MasterWorker:
 
     return this_iteration_error
 
-  def make_plots(self):
-    """Sets up the plots for visualizing progress of PSO"""
-    # Make the figure.
-    self.fig = plt.figure(figsize=[18,5])
+  def initialize_optimization_plots(self):
+    """Initializes the plots that keeps track of this optimization job's progress"""
+    self.__initialize_figure()
+    self.__make_plots()
+
+  def __initialize_figure(self):
+    """Initializes the figure for plotting optimization information"""
+    self.fig = plt.figure(figsize=[18, 5])
     plt.ion()
 
+  def __make_plots(self):
+    """Sets up the plots for visualizing progress of PSO"""
     # Plot the global convergence (best error over time).
     self.global_convergence_ax = self.fig.add_subplot(151)
     self.global_convergence_plot, = self.global_convergence_ax.plot(self.best_error_values)
@@ -290,7 +296,7 @@ class MasterWorker:
     self.fig.canvas.draw()
     self.fig.canvas.flush_events()
 
-  def update_plots(self):
+  def __update_plots(self):
     """Updates plots for visualizing the PSO"""
     # Update the global best convergence (best error over time).
     self.global_convergence_plot.set_xdata(range(1, len(self.best_error_values) + 1))
@@ -345,7 +351,7 @@ class MasterWorker:
     # Pause the plot so it can process mouse events.
     plt.pause(0.1)
   
-  def update_fit_plot(self, best_worker):
+  def __update_fit_plot(self, best_worker):
     """Updates the best fit plot with the newest best worker"""
     self.fit_plot.set_ydata(best_worker.fit_data[self.time_steps_to_steady_state:])
 
@@ -367,35 +373,3 @@ class MasterWorker:
     # Draw the new data on the plot.
     self.fig.canvas.draw()
     self.fig.canvas.flush_events()
-
-
-def from_dict(template_dict):
-  """Initializes a MasterWorker (and subsequently all workers) from supplied dictionary
-  
-  Parameters
-  ----------
-  template_dict : dict
-      The dict that supplies the necessary arguments to the MasterWorker.__init__ function.
-  
-  Returns
-  -------
-  MasterWorker
-      The MasterWorker instance.
-  """
-  mw = MasterWorker(
-    fibersim_file_string = template_dict["fibersim_file_string"],
-    protocol_file_string = template_dict["protocol_file_string"],
-    options_file_string = template_dict["options_file_string"],
-    fit_mode = template_dict["fit_mode"],
-    fit_variable = template_dict["fit_variable"],
-    original_json_model_file_string = template_dict["original_json_model_file_string"],
-    best_model_file_string = template_dict["best_model_file_string"],
-    optimization_json_template_string = template_dict["optimization_json_template_string"],
-    output_dir_string = template_dict["output_dir_string"],
-    target_data_string = template_dict["target_data_string"],
-    n_workers = template_dict["n_workers"],
-    time_steps_to_steady_state = template_dict["time_steps_to_steady_state"],
-    compute_rolling_average = template_dict["compute_rolling_average"]
-  )
-
-  return mw
