@@ -94,6 +94,7 @@ class MasterWorker:
     self.compute_rolling_average = compute_rolling_average
     self.display_progress = display_progress
     self.plot_animation_string = plot_animation_string
+    self.fig = optimization_figure
 
     # Create the output directory if it does not already exist.
     if not os.path.isdir(self.output_dir_string):

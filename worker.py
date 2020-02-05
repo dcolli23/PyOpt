@@ -451,7 +451,7 @@ class Worker:
 
   def make_plots(self):
     """Makes interactive plots for the convergence and best fit."""
-    plt.tight_layout()
+    self.fig.set_tight_layout(True)
 
     self.convergence_ax = self.fig.add_subplot(131)
     self.convergence_plot, = self.convergence_ax.plot(self.error_values)
