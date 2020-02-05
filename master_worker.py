@@ -34,7 +34,8 @@ class MasterWorker:
                time_steps_to_steady_state=2500,
                compute_rolling_average=False,
                display_progress=True,
-               plot_animation_string="./plot_animation.mp4"):
+               plot_animation_string="./plot_animation.mp4",
+               optimization_figure=None):
     """Initializes a MasterWorker object
     
     Parameters
@@ -74,6 +75,9 @@ class MasterWorker:
     plot_animation_string : str, optional
         The file string for the output optimization animation showing progress, by default 
         "./plot_animation.mp4".
+    optimization_figure : matplotlib.figure
+        The figure that is used to display the optimization, by default None and is initialized with
+        `initialize_figure()`
     """
     self.fibersim_file_string = fibersim_file_string
     self.protocol_file_string = protocol_file_string
@@ -228,7 +232,8 @@ class MasterWorker:
 
   def initialize_figure(self):
     """Initializes the figure for plotting optimization information"""
-    self.fig = plt.figure(figsize=[18, 5])
+    if not self.fig:
+      self.fig = plt.figure(figsize=[18, 5])
     plt.ion()
 
   def make_plots(self):

@@ -35,7 +35,8 @@ class Worker:
                target_data_string,
                time_steps_to_steady_state=2500,
                compute_rolling_average=False,
-               display_progress=True):
+               display_progress=True,
+               optimization_figure=None):
     """Initializes a MasterWorker object
     
     Parameters
@@ -72,6 +73,9 @@ class Worker:
         False.
     display_progress : bool, optional
         Whether to display the progress using multiple matplotlib plots, by default True.
+    optimization_figure : matplotlib.figure, optional
+        The figure that will be updated, by default None and will be initialized with 
+        `initialize_figure()`
     """
     self.fibersim_file_string = fibersim_file_string
     self.protocol_file_string = protocol_file_string
@@ -87,6 +91,7 @@ class Worker:
     self.time_steps_to_steady_state = time_steps_to_steady_state
     self.compute_rolling_average = compute_rolling_average
     self.display_progress = display_progress
+    self.fig = optimization_figure
 
     print ("WARNING: Assuming a fit mode of only time")
     print ("WARNING: Assuming fit variable of only 'muslce_force' now.")
@@ -440,7 +445,8 @@ class Worker:
 
   def initialize_figure(self):
     """Initializes the figure used to show optimization progress"""
-    self.fig = plt.figure(figsize=[9, 5])
+    if not self.fig:
+      self.fig = plt.figure(figsize=[9, 5])
     plt.ion()
 
   def make_plots(self):
