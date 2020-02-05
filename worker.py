@@ -160,9 +160,7 @@ class Worker:
     self.write_working_model_file()
 
     # Run this FiberSim simulation.
-    exit_code = run.fibersim_simulation(self.fibersim_file_string, self.options_file_string,
-      self.working_json_model_file_string, self.protocol_file_string, self.output_dir_string,
-      continuous_output=False)
+    exit_code = self.run_simulation()
 
     # Read results from this simulation.
     self.read_simulation_results()
@@ -538,3 +536,10 @@ class Worker:
     self.dump_param_information()
 
     if self.display_progress: self.update_plots()
+
+  def run_simulation(self):
+    """Runs the simulation that you are optimizing"""
+    exit_code = run.fibersim_simulation(self.fibersim_file_string, self.options_file_string,
+      self.working_json_model_file_string, self.protocol_file_string, self.output_dir_string,
+      continuous_output=False)
+    return exit_code
