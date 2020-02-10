@@ -9,6 +9,7 @@ Purpose: Class for Particle Swarm Optimization.
 
 import sys
 import os
+import types
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -35,7 +36,8 @@ class MasterWorker:
                compute_rolling_average=False,
                display_progress=True,
                plot_animation_string="./plot_animation.mp4",
-               optimization_figure=None):
+               optimization_figure=None,
+               min_error_callback=None):
     """Initializes a MasterWorker object
     
     Parameters
@@ -78,6 +80,10 @@ class MasterWorker:
     optimization_figure : matplotlib.figure
         The figure that is used to display the optimization, by default None and is initialized with
         `initialize_figure()`
+    min_error_callback : MethodType, optional
+        The callback that is called when a new minimum error is reached. By default None, such that
+        nothing happens upon reaching a new minimum error. If a function is specified, must be in
+        the MethodType syntax. The function is bound to the object during initialization.
     """
     self.fibersim_file_string = fibersim_file_string
     self.protocol_file_string = protocol_file_string
@@ -95,6 +101,11 @@ class MasterWorker:
     self.display_progress = display_progress
     self.plot_animation_string = plot_animation_string
     self.fig = optimization_figure
+
+    # Graft the minimum error callback method onto this instance of MasterWorker.
+    self.min_error_callback = min_error_callback
+    if self.min_error_callback:
+      self.min_error_callback = types.MethodType(self.min_error_callback, self)
 
     # Create the output directory if it does not already exist.
     if not os.path.isdir(self.output_dir_string):
