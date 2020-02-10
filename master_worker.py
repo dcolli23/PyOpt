@@ -219,6 +219,10 @@ class MasterWorker:
 
       # Append this new best error to the list of best errors.
       self.best_error_values.append(self.min_error_all_workers)
+
+      # Call the callback for the MasterWorker.
+      if self.min_error_callback:
+        self.min_error_callback()
     else:
       # We just need to add a redundant best error value since this iterations error value isn't
       # better than the best we already had.
