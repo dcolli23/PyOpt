@@ -185,6 +185,10 @@ class Worker:
       # Write the working model file as the best file.
       with open(self.best_model_file_string, 'w') as f:
         json.dump(self.model_dict, f, indent=2)
+      
+      # Call the callback for minimum error.
+      if self.min_error_callback:
+        self.min_error_callback()
 
     return this_error
 
@@ -547,11 +551,6 @@ class Worker:
     self.dump_param_information()
 
     if self.display_progress: self.update_plots()
-
-    # Check if this is the minimum error and call the callback if so.
-    if this_error < min(self.error_values[:-1]):
-      if self.min_error_callback:
-        self.min_error_callback()
 
   def run_simulation(self):
     """Runs the simulation that you are optimizing"""
