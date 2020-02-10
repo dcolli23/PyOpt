@@ -84,4 +84,4 @@ def test_worker_with_min_error_callback():
 
   w = worker.Worker(**this_w_dict)
 
-  assert (w.min_error_callback() == 1), "Minimum error callback not updated!"
+  assert (w.min_error_callback()), "Minimum error callback not updated!"
