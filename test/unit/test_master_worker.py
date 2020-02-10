@@ -2,6 +2,7 @@
 import os
 import sys
 import copy
+import pytest
 
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
@@ -46,7 +47,9 @@ def test_master_worker_fig_initialization():
   this_mw_dict = copy.copy(MASTER_WORKER_DICT)
   this_mw_dict["display_progress"] = True
   
+  old_initialize_figure = master_worker.MasterWorker.initialize_figure
   master_worker.MasterWorker.initialize_figure = initialize_figure
+  old_make_plots = master_worker.MasterWorker.make_plots
   master_worker.MasterWorker.make_plots = make_plots
   master_worker.MasterWorker.figure_method_called = False
   master_worker.MasterWorker.plot_method_called = False
@@ -55,3 +58,31 @@ def test_master_worker_fig_initialization():
 
   assert (mw.figure_method_called), "Figure method was not called!"
   assert (mw.plot_method_called), "Make plot method was not called!"
+
+  # Do some monkeypatch cleanup.
+  master_worker.MasterWorker.initialize_figure = old_initialize_figure
+  master_worker.MasterWorker.make_plots = old_make_plots
+  del master_worker.MasterWorker.figure_method_called
+  del master_worker.MasterWorker.plot_method_called
+
+def test_master_worker_monkeypatch_bleed():
+  mw = master_worker.MasterWorker(**MASTER_WORKER_DICT)
+
+  # This handles the expected attribute error.
+  with pytest.raises(AttributeError):
+    mw.figure_method_called
+  
+def test_master_worker_with_min_error_callback():
+  """Tests the master worker when initialized with a newly defined minimum error callback"""
+  this_mw_dict = copy.copy(MASTER_WORKER_DICT)
+
+  def new_min_error_callback(self):
+    """The new minimum error callback for the initialized worker"""
+    return True
+  
+  this_mw_dict["min_error_callback"] = new_min_error_callback
+
+  mw = master_worker.MasterWorker(**this_mw_dict)
+
+  assert (mw.min_error_callback()), "Minimum error callback not updated!"
+
