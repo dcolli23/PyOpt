@@ -13,7 +13,8 @@ import types
 
 import numpy as np
 import matplotlib.pyplot as plt
-import imageio
+# import imageio
+import cv2
 
 from . import worker
 from . import display_util as du
@@ -35,7 +36,7 @@ class MasterWorker:
                time_steps_to_steady_state=2500,
                compute_rolling_average=False,
                display_progress=True,
-               plot_animation_string="./plot_animation.mp4",
+               plot_animation_file_root="./plot_animation_",
                optimization_figure=None,
                min_error_callback=None):
     """Initializes a MasterWorker object
@@ -74,9 +75,9 @@ class MasterWorker:
         False.
     display_progress : bool, optional
         Whether to display the progress using multiple matplotlib plots, by default True.
-    plot_animation_string : str, optional
+    plot_animation_file_root : str, optional
         The file string for the output optimization animation showing progress, by default 
-        "./plot_animation.mp4".
+        "./plot_animation_". The iteration number is appended to the file root along with ".png".
     optimization_figure : matplotlib.figure
         The figure that is used to display the optimization, by default None and is initialized with
         `initialize_figure()`
@@ -99,7 +100,7 @@ class MasterWorker:
     self.time_steps_to_steady_state = time_steps_to_steady_state
     self.compute_rolling_average = compute_rolling_average
     self.display_progress = display_progress
-    self.plot_animation_string = plot_animation_string
+    self.plot_animation_file_root = plot_animation_file_root
     self.fig = optimization_figure
 
     # Graft the minimum error callback method onto this instance of MasterWorker.
@@ -162,8 +163,6 @@ class MasterWorker:
     # Create the plot if we wish to visualize progress through the optimization task.
     if self.display_progress:
       self.initialize_optimization_plots()
-      optimization_plot_path = os.path.join(output_dir_string, "optimization_plot_movie.wmv")
-      self.plot_writer = imageio.get_writer(optimization_plot_path, fps=2)
       
   def drive_workers(self, particle_array):
     """Drives the workers for an iteration of particle swarm optimization.
@@ -237,7 +236,8 @@ class MasterWorker:
 
       # Save the plot snapshot.
       snapshot = du.get_img_from_fig(self.fig, dpi=180)
-      self.plot_writer.append_data(snapshot)
+      cv2.imwrite(os.path.join(self.output_dir_string, self.plot_animation_file_root
+        +str(len(self.error_values))+".png"), snapshot)
 
     return this_iteration_error
 
