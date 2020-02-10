@@ -2,6 +2,7 @@
 import os
 import sys
 import copy
+import pytest
 
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
@@ -54,3 +55,11 @@ def test_worker_fig_initialization():
 
   assert (w.figure_method_called), "Figure method was not called!"
   assert (w.plot_method_called), "Make plot method was not called!"
+
+def test_monkeypatch_bleed():
+  """Tests that the monkeypatching done for tests does not bleed across tests"""
+  w = worker.Worker(**WORKER_DICT)
+
+  # This handles the expected attribute error.
+  with pytest.raises(AttributeError):
+    w.figured_method_called
