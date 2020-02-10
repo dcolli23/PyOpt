@@ -63,3 +63,17 @@ def test_monkeypatch_bleed():
   # This handles the expected attribute error.
   with pytest.raises(AttributeError):
     w.figured_method_called
+
+def test_worker_with_min_error_callback():
+  """Tests the worker when initialized with a newly defined minimum error callback"""
+  this_w_dict = copy.copy(WORKER_DICT)
+
+  def new_min_error_callback(self):
+    """The new minimum error callback for the initialized worker"""
+    return True
+
+  this_w_dict["min_error_callback"] = new_min_error_callback
+
+  w = worker.Worker(**this_w_dict)
+
+  assert (w.min_error_callback() == 1), "Minimum error callback not updated!"
