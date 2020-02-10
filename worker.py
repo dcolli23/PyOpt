@@ -11,6 +11,7 @@ Purpose: Worker class for Optimization. Can be called by itself for simple simpl
 import os
 import sys
 import json
+import types
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,7 +37,8 @@ class Worker:
                time_steps_to_steady_state=2500,
                compute_rolling_average=False,
                display_progress=True,
-               optimization_figure=None):
+               optimization_figure=None,
+               min_error_callback=None):
     """Initializes a MasterWorker object
     
     Parameters
@@ -76,6 +78,10 @@ class Worker:
     optimization_figure : matplotlib.figure, optional
         The figure that will be updated, by default None and will be initialized with 
         `initialize_figure()`
+    min_error_callback : MethodType, optional
+        The callback that is called when a new minimum error is reached. By default None, such that
+        nothing happens upon reaching a new minimum error. If a function is specified, must be in
+        the MethodType syntax. The function is bound to the object during initialization.
     """
     self.fibersim_file_string = fibersim_file_string
     self.protocol_file_string = protocol_file_string
@@ -92,6 +98,11 @@ class Worker:
     self.compute_rolling_average = compute_rolling_average
     self.display_progress = display_progress
     self.fig = optimization_figure
+
+    # Graft the minimum error callback method onto this instance of Worker.
+    self.min_error_callback = min_error_callback
+    if self.min_error_callback:
+      self.min_error_callback = types.MethodType(self.min_error_callback, self)
 
     print ("WARNING: Assuming a fit mode of only time")
     print ("WARNING: Assuming fit variable of only 'muslce_force' now.")
@@ -536,6 +547,11 @@ class Worker:
     self.dump_param_information()
 
     if self.display_progress: self.update_plots()
+
+    # Check if this is the minimum error and call the callback if so.
+    if this_error < min(self.error_values[:-1]):
+      if self.min_error_callback:
+        self.min_error_callback()
 
   def run_simulation(self):
     """Runs the simulation that you are optimizing"""
