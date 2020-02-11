@@ -153,7 +153,7 @@ class MasterWorker:
       "original_json_model_file_string":self.original_json_model_file_string,
       "best_model_file_string":self.best_model_file_string,
       "optimization_json_template_string":self.optimization_json_template_string,
-      "target_data_string":self.target_data_string,
+      "target_data":self.target_data_string,
       "time_steps_to_steady_state":self.time_steps_to_steady_state,
       "compute_rolling_average":self.compute_rolling_average,
       "display_progress":False

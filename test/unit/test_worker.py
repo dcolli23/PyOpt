@@ -5,7 +5,7 @@ import copy
 import shutil
 
 import pytest
-
+import numpy as np
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
 PYOPT_ROOT = os.path.join(ROOT, "..", "..")
@@ -32,7 +32,7 @@ WORKER_DICT = {
   "best_model_file_string": os.path.join(TEST_RESULT_DIR, "best_model.json"),
   "optimization_json_template_string": os.path.join(TEST_DATA_ROOT, "optimization_template.json"),
   "output_dir_string": TEST_RESULT_DIR,
-  "target_data_string": os.path.join(TEST_DATA_ROOT, "forces.txt"),
+  "target_data": os.path.join(TEST_DATA_ROOT, "forces.txt"),
   "time_steps_to_steady_state":1,
   "compute_rolling_average":False,
   "display_progress":False
@@ -93,3 +93,11 @@ def test_worker_with_min_error_callback():
   w = worker.Worker(**this_w_dict)
 
   assert (w.min_error_callback()), "Minimum error callback not updated!"
+
+def test_worker_pass_in_target_data_array():
+  this_w_dict = copy.copy(WORKER_DICT)
+
+  # Read the target data in.
+  this_w_dict["target_data"] = np.loadtxt(this_w_dict["target_data"])
+  w = worker.Worker(**this_w_dict)
+  assert (w), "Worker did not initialize correctly!"

@@ -33,7 +33,7 @@ class Worker:
                best_model_file_string,
                optimization_json_template_string,
                output_dir_string,
-               target_data_string,
+               target_data,
                time_steps_to_steady_state=2500,
                compute_rolling_average=False,
                display_progress=True,
@@ -64,10 +64,12 @@ class Worker:
         The file path to the optimization template, where the initial p-values are stored.
     output_dir_string : str
         The path to the output directory for this simulation.
-    target_data_string : str
-        The file path to the target data. Must be in a two column format where the first column is
-        the time and the second column is the data for the `fit_variable`. 
-        Note:: The time column for this must currently be in 1 millisecond increments.
+    target_data : str or numpy.ndarray
+        The file path to the target data or the previously read-in target data.
+        If using `fit_mode` == "time":
+          Must be in a two column format where the first column is
+          the time and the second column is the data for the `fit_variable`. 
+          Note:: The time column for this must currently be in 1 millisecond increments.
     time_steps_to_steady_state : int, optional
         The number of time steps it takes for FiberSim to reach steady state, by default 2500.
     compute_rolling_average : bool, optional
@@ -93,7 +95,7 @@ class Worker:
     self.best_model_file_string = best_model_file_string
     self.optimization_json_template_string = optimization_json_template_string
     self.output_dir_string = output_dir_string
-    self.target_data_string = target_data_string
+    self.target_data = target_data
     self.time_steps_to_steady_state = time_steps_to_steady_state
     self.compute_rolling_average = compute_rolling_average
     self.display_progress = display_progress
@@ -194,30 +196,34 @@ class Worker:
 
   def read_target_data(self):
     """Reads in the objective function data and interpolates based on simulation times."""
-    if self.fit_variable == "muscle_force":
-      print ("Assuming 'muscle_force' data is a formatted TXT file.")
-      self.target_data = np.loadtxt(self.target_data_string)
+    if isinstance(self.target_data, str):
+      if self.fit_variable == "muscle_force":
+        print ("Assuming 'muscle_force' data is a formatted TXT file.")
+        self.target_data = np.loadtxt(self.target_data)
 
-      # Get the time step for the simulation.
-      delta_ts = [self.target_data[i+1, 0] - self.target_data[i, 0] for i in range(
-        self.target_data.shape[0] - 1)]
-      self.time_step = np.mean(delta_ts)
+        # Get the time step for the simulation.
+        delta_ts = [self.target_data[i+1, 0] - self.target_data[i, 0] for i in range(
+          self.target_data.shape[0] - 1)]
+        self.time_step = np.mean(delta_ts)
 
-      # Do some error-checking.
-      if not np.isclose(self.time_step, 0.001):
-        # raise RuntimeError("Time step other than 1 millisecond not supported!")
-        print ("WARNING: TIME STEPS OTHER THAN 1 MILLISECOND NOT SUPPORTED!")
+        # Do some error-checking.
+        if not np.isclose(self.time_step, 0.001):
+          # raise RuntimeError("Time step other than 1 millisecond not supported!")
+          print ("WARNING: TIME STEPS OTHER THAN 1 MILLISECOND NOT SUPPORTED!")
+      else:
+        raise RuntimeError("Fit variable not recognized!!")
+    
+    if self.fit_mode == "time":
+      # Linearly interpolate the target data according to the simulation time steps.
+      times_to_interpolate = (np.asarray(self.sim_times[self.time_steps_to_steady_state:])
+        - self.sim_times[self.time_steps_to_steady_state])
+      interpolated_values = np.interp(times_to_interpolate, self.target_data[:, 0], 
+        self.target_data[:, 1])
+      
+      # Concatenate these back together to form the newly interpolated target data and store it.
+      self.target_data = np.stack((times_to_interpolate, interpolated_values), axis=-1)
     else:
-      raise RuntimeError("Fit variable not recognized!!")
-    
-    # Linearly interpolate the target data according to the simulation time steps.
-    times_to_interpolate = (np.asarray(self.sim_times[self.time_steps_to_steady_state:])
-      - self.sim_times[self.time_steps_to_steady_state])
-    interpolated_values = np.interp(times_to_interpolate, self.target_data[:, 0], 
-      self.target_data[:, 1])
-    
-    # Concatenate these back together to form the newly interpolated target data and store it.
-    self.target_data = np.stack((times_to_interpolate, interpolated_values), axis=-1)
+      raise RuntimeError("`Worker.fit_mode` not understood!")
 
   def read_options_file(self):
     """Reads options file into class dictionary."""
