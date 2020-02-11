@@ -2,8 +2,9 @@
 import os
 import sys
 import copy
-import pytest
+import shutil
 
+import pytest
 import matplotlib.pyplot as plt
 
 
@@ -14,6 +15,12 @@ from PyOpt import master_worker
 
 TEST_DATA_ROOT = os.path.join(ROOT, "..", "data", "unit")
 TEST_RESULT_DIR = os.path.join(ROOT, "..", "output", "unit")
+
+# Clear out the previous test results.
+for path in os.listdir(TEST_RESULT_DIR):
+  path = os.path.join(TEST_RESULT_DIR, path)
+  if os.path.isdir(path):
+    shutil.rmtree(path)
 
 MASTER_WORKER_DICT = {
   "fibersim_file_string": None,

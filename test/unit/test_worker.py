@@ -2,6 +2,8 @@
 import os
 import sys
 import copy
+import shutil
+
 import pytest
 
 
@@ -12,6 +14,12 @@ from PyOpt import worker
 
 TEST_DATA_ROOT = os.path.join(ROOT, "..", "data", "unit")
 TEST_RESULT_DIR = os.path.join(ROOT, "..", "output", "unit")
+
+# Clear out the previous test results.
+for path in os.listdir(TEST_RESULT_DIR):
+  path = os.path.join(TEST_RESULT_DIR, path)
+  if os.path.isdir(path):
+    shutil.rmtree(path)
 
 WORKER_DICT = {
   "fibersim_file_string": None,

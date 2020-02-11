@@ -318,7 +318,6 @@ class MasterWorker:
     for worker in self.workers:
       these_ps = [obj.p_value for obj in worker.p_objs]
       this_p_plot, = self.p_ax.plot(these_ps, y_values, marker='o')
-      # this_p_plot = self.p_ax.scatter(these_ps, y_values)
       self.p_plots.append(this_p_plot)
     
     # Set the y labels.
