@@ -222,7 +222,7 @@ class Worker:
       
       # Concatenate these back together to form the newly interpolated target data and store it.
       self.target_data = np.stack((times_to_interpolate, interpolated_values), axis=-1)
-    else:
+    elif self.fit_mode != "end_point":
       raise RuntimeError("`Worker.fit_mode` not understood!")
 
   def read_options_file(self):
@@ -391,6 +391,12 @@ class Worker:
     """Returns the error for this simulation based on the objective function."""
     if self.fit_mode == "time":
       error = np.sum((self.fit_data[self.time_steps_to_steady_state:] - self.target_data[:,1])**2)
+    elif self.fit_mode == "end_point":
+      # Average the last 10 time points
+      no_of_time_steps_to_avg = 10
+      no_of_time_steps_to_avg = min([self.fit_data.shape[0], no_of_time_steps_to_avg])
+      simulation_end_point = np.mean(self.fit_data[-no_of_time_steps_to_avg:])
+      error = np.sum((self.target_data - simulation_end_point)**2)
     else:
       raise RuntimeError("Fit mode \"{}\" not support!".format(self.fit_mode))
 
