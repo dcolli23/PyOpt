@@ -123,28 +123,44 @@ class MasterWorker:
     self.error_values = []
     self.best_error_values = []
 
-    # Create a the dictionary we'll use to initialize all of our workers.
-    worker_dict = {
-      "fibersim_file_string":fibersim_file_string,
-      "protocol_file_string":protocol_file_string,
-      "options_file_string":options_file_string,
-      "fit_mode":fit_mode,
-      "fit_variable":fit_variable,
-      "original_json_model_file_string":original_json_model_file_string,
-      "best_model_file_string":best_model_file_string,
-      "optimization_json_template_string":optimization_json_template_string,
-      "target_data_string":target_data_string,
-      "time_steps_to_steady_state":time_steps_to_steady_state,
-      "compute_rolling_average":compute_rolling_average,
-      "display_progress":False
-    }
-
     # Create the list where we'll store all of the workers.
     self.workers = []
     self.best_worker_index = 0
 
+    self.initialize_workers()
+    
+    # Create the plot if we wish to visualize progress through the optimization task.
+    if self.display_progress:
+      self.initialize_optimization_plots()
+
+      # Make the animation folder if it's not present, clean it out if it is present.
+      if not os.path.isdir(self.animation_output_dir):
+        os.mkdir(self.animation_output_dir)
+      else:
+        for file_path in os.listdir(self.animation_output_dir):
+          if os.path.isfile(file_path): # only remove files, not directories.
+            os.remove(file_path)
+
+  def initialize_workers(self):
+    """Initializes the workers that this MasterWorker controls"""
+    # Create a the dictionary we'll use to initialize all of our workers.
+    worker_dict = {
+      "fibersim_file_string":self.fibersim_file_string,
+      "protocol_file_string":self.protocol_file_string,
+      "options_file_string":self.options_file_string,
+      "fit_mode":self.fit_mode,
+      "fit_variable":self.fit_variable,
+      "original_json_model_file_string":self.original_json_model_file_string,
+      "best_model_file_string":self.best_model_file_string,
+      "optimization_json_template_string":self.optimization_json_template_string,
+      "target_data_string":self.target_data_string,
+      "time_steps_to_steady_state":self.time_steps_to_steady_state,
+      "compute_rolling_average":self.compute_rolling_average,
+      "display_progress":False
+    }
+
     # Create all of the workers.
-    for i in range(n_workers):
+    for i in range(self.n_workers):
       # We're going to create a new directory structure for each of our workers.
       worker_base_dir = os.path.join(self.output_dir_string, "worker_" + str(i))
 
@@ -163,19 +179,7 @@ class MasterWorker:
 
       # Add the worker to our list of workers.
       self.workers.append(worker_obj)
-    
-    # Create the plot if we wish to visualize progress through the optimization task.
-    if self.display_progress:
-      self.initialize_optimization_plots()
 
-      # Make the animation folder if it's not present, clean it out if it is present.
-      if not os.path.isdir(self.animation_output_dir):
-        os.mkdir(self.animation_output_dir)
-      else:
-        for file_path in os.listdir(self.animation_output_dir):
-          if os.path.isfile(file_path): # only remove files, not directories.
-            os.remove(file_path)
-      
   def drive_workers(self, particle_array):
     """Drives the workers for an iteration of particle swarm optimization.
 
