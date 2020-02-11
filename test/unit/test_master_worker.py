@@ -92,7 +92,7 @@ def test_master_worker_save_plot_animation():
   """Tests that the master worker can save a plot animation"""
   mw = master_worker.MasterWorker(**MASTER_WORKER_DICT)
 
-  true_animation_output_dir = os.path.join(TEST_RESULT_DIR, "animation")
+  true_animation_output_dir = os.path.join(TEST_RESULT_DIR, "optimization_results", "animation")
   mw.plot_animation_file_root = "test_"
   mw.error_values = [1, 2, 3, 4, 5]
 

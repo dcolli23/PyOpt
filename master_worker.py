@@ -10,6 +10,7 @@ Purpose: Class for Particle Swarm Optimization.
 import sys
 import os
 import types
+import shutil
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -102,16 +103,19 @@ class MasterWorker:
     self.display_progress = display_progress
     self.plot_animation_file_root = plot_animation_file_root
     self.fig = optimization_figure
-    self.animation_output_dir = os.path.join(self.output_dir_string, "animation")
+    self.optimization_output_dir = os.path.join(self.output_dir_string, "optimization_results")
+    self.animation_output_dir = os.path.join(self.optimization_output_dir, "animation")
 
     # Graft the minimum error callback method onto this instance of MasterWorker.
     self.min_error_callback = min_error_callback
     if self.min_error_callback:
       self.min_error_callback = types.MethodType(self.min_error_callback, self)
 
-    # Create the output directory if it does not already exist.
-    if not os.path.isdir(self.output_dir_string):
-      os.mkdir(self.output_dir_string)
+    # Create the output directories if they do not already exist.
+    if not os.path.isdir(self.optimization_output_dir):
+      os.makedirs(self.optimization_output_dir, exist_ok=True)
+    if not os.path.isdir(self.animation_output_dir):
+      os.mkdir(self.animation_output_dir)
 
     # Set the minimum error across all workers to a ridiculously high value such that any new
     # simulation in the first round of parameter evaluation will overwrite it as the "best".
@@ -143,17 +147,16 @@ class MasterWorker:
     for i in range(n_workers):
       # We're going to create a new directory structure for each of our workers.
       worker_base_dir = os.path.join(self.output_dir_string, "worker_" + str(i))
-      if not os.path.isdir(worker_base_dir):
-        os.mkdir(worker_base_dir)
 
       # Add/modify the dictionary key/value pairs that the worker needs to be initialized.
       worker_dict["working_json_model_file_string"] = os.path.join(worker_base_dir,
         "working_model.json")
       worker_dict["output_dir_string"] = os.path.join(worker_base_dir, "results")
 
-      # Create the output directory for this worker if it has not been created previously.
-      if not os.path.isdir(worker_dict["output_dir_string"]):
-        os.mkdir(worker_dict["output_dir_string"])
+      # Clean any previously made worker directories and make a new one.
+      if os.path.isdir(worker_base_dir):
+        shutil.rmtree(worker_base_dir)
+      os.makedirs(worker_dict["output_dir_string"])
 
       # Initialize the worker.
       worker_obj = worker.Worker(**worker_dict)
