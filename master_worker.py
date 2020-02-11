@@ -102,6 +102,7 @@ class MasterWorker:
     self.display_progress = display_progress
     self.plot_animation_file_root = plot_animation_file_root
     self.fig = optimization_figure
+    self.animation_output_dir = os.path.join(self.output_dir_string, "animation")
 
     # Graft the minimum error callback method onto this instance of MasterWorker.
     self.min_error_callback = min_error_callback
@@ -163,6 +164,14 @@ class MasterWorker:
     # Create the plot if we wish to visualize progress through the optimization task.
     if self.display_progress:
       self.initialize_optimization_plots()
+
+      # Make the animation folder if it's not present, clean it out if it is present.
+      if not os.path.isdir(self.animation_output_dir):
+        os.mkdir(self.animation_output_dir)
+      else:
+        for file_path in os.listdir(self.animation_output_dir):
+          if os.path.isfile(file_path): # only remove files, not directories.
+            os.remove(file_path)
       
   def drive_workers(self, particle_array):
     """Drives the workers for an iteration of particle swarm optimization.
@@ -235,9 +244,7 @@ class MasterWorker:
       self.__update_plots()
 
       # Save the plot snapshot.
-      snapshot = du.get_img_from_fig(self.fig, dpi=180)
-      cv2.imwrite(os.path.join(self.output_dir_string, self.plot_animation_file_root
-        +str(len(self.error_values))+".png"), snapshot)
+      self.save_plot_snapshot()
 
     return this_iteration_error
 
@@ -324,6 +331,13 @@ class MasterWorker:
     # draw the data on the plot
     self.fig.canvas.draw()
     self.fig.canvas.flush_events()
+
+  def save_plot_snapshot(self):
+    """Saves a snapshot of the plots and saves to the animation output directory"""
+    snapshot = du.get_img_from_fig(self.fig, dpi=180)
+    output_image_path = os.path.join(self.animation_output_dir, self.plot_animation_file_root
+      +str(len(self.error_values))+".png")
+    cv2.imwrite(output_image_path, snapshot)
 
   def __update_plots(self):
     """Updates plots for visualizing the PSO"""

@@ -4,6 +4,8 @@ import sys
 import copy
 import pytest
 
+import matplotlib.pyplot as plt
+
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
 PYOPT_ROOT = os.path.join(ROOT, "..", "..")
@@ -28,7 +30,7 @@ MASTER_WORKER_DICT = {
   "time_steps_to_steady_state":1,
   "compute_rolling_average":False,
   "display_progress":False,
-  "plot_animation_string":None
+  "plot_animation_file_root":None
 }
 
 def test_master_worker_direct_initialization():
@@ -85,4 +87,24 @@ def test_master_worker_with_min_error_callback():
   mw = master_worker.MasterWorker(**this_mw_dict)
 
   assert (mw.min_error_callback()), "Minimum error callback not updated!"
+
+def test_master_worker_save_plot_animation():
+  """Tests that the master worker can save a plot animation"""
+  this_mw_dict = copy.copy(MASTER_WORKER_DICT)
+
+  mw = master_worker.MasterWorker(**MASTER_WORKER_DICT)
+
+  true_animation_output_dir = os.path.join(TEST_RESULT_DIR, "animation")
+  mw.plot_animation_file_root = "test_"
+  mw.error_values = [1, 2, 3, 4, 5]
+
+  true_file_name = os.path.join(true_animation_output_dir, 
+    mw.plot_animation_file_root+str(len(mw.error_values))+".png")
+
+  mw.fig = plt.figure()
+  
+  mw.save_plot_snapshot()
+
+  assert (os.path.isfile(true_file_name)), "MasterWorker not saving animation correctly!"
+
 
