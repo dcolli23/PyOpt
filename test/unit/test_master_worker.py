@@ -90,8 +90,6 @@ def test_master_worker_with_min_error_callback():
 
 def test_master_worker_save_plot_animation():
   """Tests that the master worker can save a plot animation"""
-  this_mw_dict = copy.copy(MASTER_WORKER_DICT)
-
   mw = master_worker.MasterWorker(**MASTER_WORKER_DICT)
 
   true_animation_output_dir = os.path.join(TEST_RESULT_DIR, "animation")
