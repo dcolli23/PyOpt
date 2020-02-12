@@ -65,6 +65,7 @@ class WorkerFamily:
     self.compute_rolling_average = compute_rolling_average
     self.display_progress = display_progress
     self.children = []
+    self.error_values = []
 
     child_dict = {
       "fibersim_file_string":self.fibersim_file,
@@ -98,4 +99,18 @@ class WorkerFamily:
       child_obj = worker.Worker(**child_dict)
       self.children.append(child_obj)
 
+  def fit(self, p_value_array):
+    """Calls the fit function for each child of this family and returns collective error"""
+    # Create error storage for our family of simulations.
+    error = 0
 
+    for i, child in enumerate(self.children):
+      print ("Running child #{}/{}".format(i + 1, len(self.children)))
+      error += child.fit_worker(p_value_array)
+      child.dump_param_information()
+
+    # if error < min(self.error_values):
+
+    self.error_values.append(error)
+
+    return error

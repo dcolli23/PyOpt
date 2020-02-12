@@ -45,6 +45,16 @@ def test_worker_family_initialization():
   wf = worker_family.WorkerFamily(**WF_DICT)
 
   assert (len(wf.children) == len(WF_DICT["protocol_files"])), ("WorkerFamily did not initialize "
-    "correct number of children")
+    "correct number of children!")
+
+def test_worker_family_fit_function():
+  wf = worker_family.WorkerFamily(**WF_DICT)
+
+  for child in wf.children:
+    child.fit_worker = lambda x: 1
+  
+  dummy_p_values = np.asarray([1])
+
+  assert (wf.fit(dummy_p_values) == len(wf.children)), "Family fit function did not validate!"
   
 
