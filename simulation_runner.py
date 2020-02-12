@@ -1,5 +1,7 @@
 """Holds the SimulationRunner class"""
+import os
 import sys
+import subprocess
 
 import numpy as np
 
@@ -51,6 +53,7 @@ class SimulationRunner:
     self.target_data = target_data
     self.time_steps_to_steady_state = time_steps_to_steady_state
     self.compute_rolling_average = compute_rolling_average
+    self.fit_data = None
 
     # Read in the simulation times from the protocol file. We'll be using these for interpolating
     # the target data.
@@ -88,3 +91,35 @@ class SimulationRunner:
       self.target_data = np.stack((times_to_interpolate, interpolated_values), axis=-1)
     elif self.fit_mode != "end_point":
       raise RuntimeError("`Worker.fit_mode` not understood!")
+
+  def run_simulation(self):
+    """Runs the simulation that you are optimizing"""
+    cmd = [self.fibersim_file, self.options_file, self.model_file, self.protocol_file, 
+      self.output_dir]
+
+    # Start the process.
+    exit_code = subprocess.call(cmd)
+
+    return exit_code
+
+  def read_simulation_results(self):
+    """Returns an averaged result value from the repeats ran by run_fibersim_simulation()."""      
+    # Check which optimization mode we're using to point to the right file.
+    if self.fit_variable == "muscle_force":
+      file_str = "forces.txt"
+    else:
+      raise RuntimeError("Can't optimize anything but 'muscle_force'!!!")
+    
+    full_path = os.path.join(self.output_dir, file_str)
+
+    # Read in the appropriate results file.
+    if self.fit_variable == "muscle_force":
+      # Just pull out the total muscle force from the forces file. This is in the last column
+      # of the file.
+      self.fit_data = np.loadtxt(full_path, skiprows=1)[:, -1]
+
+    # Do the rolling average if we so choose.
+    if self.compute_rolling_average:
+      rolling_window_size = 5
+      kernel = np.ones(rolling_window_size) / rolling_window_size
+      self.fit_data = np.convolve(self.fit_data, kernel, 'valid')

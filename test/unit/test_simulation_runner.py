@@ -98,5 +98,32 @@ def test_read_target_data_muscle_force_time_numpy_array():
 #   this_sr_dict = copy.copy(SIM_RUNNER_DICT)
 #   this_sr_dict["fit_mode"] = "end_point"
 
+def test_read_simulation_results_force():
+  force_file = os.path.join(TEST_DATA_ROOT, "forces.txt")
+  results_truth = np.loadtxt(force_file, skiprows=1)[:, -1]
+  this_sr_dict = copy.copy(SIM_RUNNER_DICT)
+  this_sr_dict["output_dir"] = TEST_DATA_ROOT
+  sr = SimulationRunner(**this_sr_dict)
+
+  sr.read_simulation_results()
+
+  assert (np.array_equal(sr.fit_data, results_truth)), ("SimulationRunner did not read in "
+    "simulation results correctly!")
+
 # def test_run_simulation():
-#   sr = SimulationRunner(**SIM_RUNNER_DICT)
+#   """This uses the `echo` windows command to test that the simulation runs correctly"""
+#   this_sr_dict = copy.copy(SIM_RUNNER_DICT)
+#   this_sr_dict["fibersim_file"] = "echo"
+#   this_sr_dict["options_file"] = "Hello,"
+#   this_sr_dict["model_file"] = "World!"
+#   # this_sr_dict["protocol_file"] = ">"
+#   # this_sr_dict["output_dir"] = os.path.realpath(os.path.join(TEST_RESULT_DIR, "sim_run_test.txt"))
+#   sr = SimulationRunner(**this_sr_dict)
+
+#   sr.run_simulation()
+
+#   # Read the newly created file.
+#   with open(this_sr_dict["output_dir"], 'r') as f:
+#     text = f.read()
+
+#   assert (text == "Hello, World!"), "SimulationRunner did not run simulation correctly!"
