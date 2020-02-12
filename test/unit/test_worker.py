@@ -32,7 +32,7 @@ WORKER_DICT = {
   "best_model_file_string": os.path.join(TEST_RESULT_DIR, "best_model.json"),
   "optimization_json_template_string": os.path.join(TEST_DATA_ROOT, "optimization_template.json"),
   "output_dir_string": TEST_RESULT_DIR,
-  "target_data": os.path.join(TEST_DATA_ROOT, "forces.txt"),
+  "target_data": os.path.join(TEST_DATA_ROOT, "target_data_muscle_force.txt"),
   "time_steps_to_steady_state":1,
   "compute_rolling_average":False,
   "display_progress":False
@@ -102,18 +102,3 @@ def test_worker_pass_in_target_data_array():
   w = worker.Worker(**this_w_dict)
   assert (w), "Worker did not initialize correctly!"
 
-def test_worker_fit_mode_single_point():
-  """Tests that the worker can assess its error based on a single point"""
-  this_w_dict = copy.copy(WORKER_DICT)
-  this_w_dict["target_data"] = np.asarray([3039.663])
-  this_w_dict["time_steps_to_steady_state"] = 0
-  this_w_dict["fit_mode"] = "end_point"
-
-  w = worker.Worker(**this_w_dict)
-
-  # manipulate the state of the worker to test if the simulation results are dealt with correctly.
-  w.output_dir_string = TEST_DATA_ROOT
-  w.read_simulation_results()
-
-  sim_error = w.get_simulation_error()
-  assert (np.isclose(sim_error, 0)), "Single point error evaluation did not validate!"

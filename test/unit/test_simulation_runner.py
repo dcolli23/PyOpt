@@ -83,11 +83,21 @@ def test_read_target_data_muscle_force_time_numpy_array():
   # Concatenate these back together to form the newly interpolated target data and store it.
   target_data_truth = np.stack((times_to_interpolate, interpolated_values), axis=-1)
 
-  sr = SimulationRunner(**SIM_RUNNER_DICT)
+  sr = SimulationRunner(**this_sr_dict)
 
   assert (np.array_equal(sr.target_data, target_data_truth)), ("SimulationRunner did not read "
     "target data correctly!")
-  
+
+def test_read_target_data_maintains_shape_of_target_data():
+  target_data_orig = np.loadtxt(SIM_RUNNER_DICT["target_data"])
+  this_sr_dict = copy.copy(SIM_RUNNER_DICT)
+  this_sr_dict["target_data"] = target_data_orig
+
+  sr = SimulationRunner(**this_sr_dict)
+
+  assert (sr.target_data.shape[0] == target_data_orig.shape[0]), ("SimulationRunner reading of "
+    "target data does NOT preserve shape of target data! THIS IS CURRENTLY IGNORED")
+
 # def test_read_target_data_muscle_force_end_point_string():
 #   this_sr_dict = copy.copy(SIM_RUNNER_DICT)
 #   this_sr_dict["fit_mode"] = "end_point"
@@ -109,6 +119,28 @@ def test_read_simulation_results_force():
 
   assert (np.array_equal(sr.fit_data, results_truth)), ("SimulationRunner did not read in "
     "simulation results correctly!")
+
+def test_get_simulation_error_time():
+  force_file = os.path.join(TEST_DATA_ROOT, "forces.txt")
+  results_truth = np.loadtxt(force_file, skiprows=1)[:, -1]
+  sr = SimulationRunner(**SIM_RUNNER_DICT)
+  sr.fit_data = results_truth
+
+  assert (np.isclose(sr.get_simulation_error(), 0)), ("SimulationRunner not calculating error "
+    "correctly!")
+
+def test_get_simulation_error_end_point():
+  force_file = os.path.join(TEST_DATA_ROOT, "forces.txt")
+  fit_data = np.loadtxt(force_file, skiprows=1)[:, -1]
+  target_truth = np.mean(fit_data[-10:])
+  this_sr_dict = copy.copy(SIM_RUNNER_DICT)
+  this_sr_dict["fit_mode"] = "end_point"
+  sr = SimulationRunner(**this_sr_dict)
+  sr.target_data = np.asarray([target_truth])
+  sr.fit_data = fit_data
+
+  assert (np.isclose(sr.get_simulation_error(), 0)), ("SimulationRunner not calculating error "
+    "correctly!")
 
 # def test_run_simulation():
 #   """This uses the `echo` windows command to test that the simulation runs correctly"""

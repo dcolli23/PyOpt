@@ -35,7 +35,7 @@ WF_DICT = {
   "fit_variable": "muscle_force",
   "optimization_template_file": os.path.join(TEST_DATA_ROOT, "optimization_template.json"),
   "output_dir": TEST_RESULT_DIR,
-  "target_data": os.path.join(TEST_DATA_ROOT, "forces.txt"),
+  "target_data": os.path.join(TEST_DATA_ROOT, "target_data_muscle_force.txt"),
   "time_steps_to_steady_state":1,
   "compute_rolling_average":False,
   "display_progress":False

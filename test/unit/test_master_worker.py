@@ -32,7 +32,7 @@ MASTER_WORKER_DICT = {
   "best_model_file_string": os.path.join(TEST_RESULT_DIR, "best_model.json"),
   "optimization_json_template_string": os.path.join(TEST_DATA_ROOT, "optimization_template.json"),
   "output_dir_string": TEST_RESULT_DIR,
-  "target_data_string": os.path.join(TEST_DATA_ROOT, "forces.txt"),
+  "target_data_string": os.path.join(TEST_DATA_ROOT, "target_data_muscle_force.txt"),
   "n_workers": 2,
   "time_steps_to_steady_state":1,
   "compute_rolling_average":False,
