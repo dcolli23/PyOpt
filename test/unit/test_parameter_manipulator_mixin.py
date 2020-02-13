@@ -45,20 +45,6 @@ PARAM_DICT = {
   "display_progress":False
 }
 
-def test_mixin_read_options_file():
-  # Read in the options file.
-  with open(PARAM_DICT["options_file"], 'r') as f:
-    options_truth = json.load(f)
-  
-  # Initialize the mixin.
-  pmm = ParameterManipulatorMixin()
-  pmm.options_file = PARAM_DICT["options_file"]
-  pmm.read_options_file()
-
-  # This is a shallow equivalence check but it will do for now since the options dictionary is flat.
-  assert (pmm.options_dict == options_truth), ("ParameterManipulatorMixin did not read options "
-    "file correctly!")
-
 def test_set_regular_param():
   test = {"a":1, "b":2}
   pmm = ParameterManipulatorMixin()

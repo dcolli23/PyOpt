@@ -23,9 +23,6 @@ class ParameterManipulatorMixin:
     # Initialize the empty parameter interpolation lists.
     self.p_objs = []
 
-    # Read in the options file to set the number of repeats.
-    self.read_options_file()
-
     # Read in the original JSON model file.
     self.read_original_model_file()
 
@@ -35,11 +32,6 @@ class ParameterManipulatorMixin:
     # Form the initial p_value array and p-value history.
     self.p_values = np.asarray([obj.p_value for obj in self.p_objs])
     self.p_value_history = [[obj.p_value] for obj in self.p_objs]
-
-  def read_options_file(self):
-    """Reads options file into class dictionary."""
-    with open(self.options_file, 'r') as f:
-      self.options_dict = json.load(f)
 
   def update_parameters(self):
     """Updates the parameters for this worker from the p_vals array."""
