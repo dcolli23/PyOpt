@@ -147,5 +147,30 @@ def test_update_parameters():
   assert (pmm.p_objs[1].calculated_value == param2_truth), ("ParameterManipulationMixin did not "
     "update parameter correctly!")
 
+def test_param_dump():
+  pmm = ParameterManipulatorMixin()
+  pmm.p_values = np.asarray([0.5, 0.5])
+  pmm.p_objs = []
+  pmm.output_dir = PARAM_DICT["output_dir"]
+  pmm.original_model_file = PARAM_DICT["original_model_file"]
+  pmm.read_original_model_file()
+  pmm.optimization_template_file = PARAM_DICT["optimization_template_file"]
+  pmm.read_optimization_structure()
+  pmm.update_parameters()
+  pmm.dump_param_information()
 
+  param1_truth = 650
+  param2_truth = 100
+
+  param_dump = np.loadtxt(os.path.join(pmm.output_dir, "parameter_history.txt"), skiprows=1)
+  p_dump = np.loadtxt(os.path.join(pmm.output_dir, "p_history.txt"), skiprows=1)
+
+  assert (param_dump[0] == param1_truth), ("ParameterManipulationMixin did not dump parameter "
+    "correctly!")
+  assert (param_dump[1] == param2_truth), ("ParameterManipulationMixin did not dump parameter "
+    "correctly!")
+  assert (p_dump[0] == pmm.p_values[0]), ("ParameterManipulationMixin did not dump p value "
+    "correctly!")
+  assert (p_dump[1] == pmm.p_values[1]), ("ParameterManipulationMixin did not dump p value "
+    "correctly!")
 

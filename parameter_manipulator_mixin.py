@@ -5,6 +5,7 @@ Created on Thur Feb 13 11:20:00 2020
 
 Purpose: Mixin for manipulating parameters/instruction files from optimization template.
 """
+import os
 import sys
 import json
 
@@ -119,60 +120,52 @@ class ParameterManipulatorMixin:
     with open(self.original_model_file, 'r') as f:
       self.model_dict = json.load(f)
 
-  # def dump_param_information(self):
-  #   """Dumps the parameter information for this iteration of the optimizer."""
-  #   # Get the file name.
-  #   file_name = os.path.join(self.output_dir, "parameter_history.txt")
+  def dump_param_information(self):
+    """Dumps the parameter information for this iteration of the optimizer."""
+    # Get the file name.
+    file_name = os.path.join(self.output_dir, "parameter_history.txt")
 
-  #   # If the file hasn't been written yet, open it and write the headers.
-  #   if not os.path.isfile(file_name):
-  #     # Open the file for writing.
-  #     f = open(file_name, 'w')
-
-  #     # Get the parameter names.
-  #     param_names = [obj.p_lookup[-1] for obj in self.p_objs]
-
-  #     # Write the headers.
-  #     str_to_write = '\t'.join(param_names) + '\n'
-
-  #   else:
-  #     # Open the file for appending
-  #     f = open(file_name, 'a')
-  #     str_to_write = ""
+    # If the file hasn't been written yet, open it and write the headers.
+    if not os.path.isfile(file_name):
+      f = open(file_name, 'w')
+      param_names = [obj.p_lookup[-1] for obj in self.p_objs]
+      str_to_write = '\t'.join(param_names) + '\n'
+    else:
+      # Open the file for appending
+      f = open(file_name, 'a')
+      str_to_write = ""
     
-  #   # Get the parameter values.
-  #   param_values = [str(obj.calculated_value) for obj in self.p_objs]
+    param_values = [str(obj.calculated_value) for obj in self.p_objs]
+    str_to_write += '\t'.join(param_values) + '\n'
 
-  #   # Put the information in the string to write.
-  #   str_to_write += '\t'.join(param_values) + '\n'
+    # Write the information for the parameters.
+    f.write(str_to_write)
 
-  #   # Write the information for the parameters.
-  #   f.write(str_to_write)
+    # Tidy up.
+    f.close()
 
-  #   # Tidy up.
-  #   f.close()
-
-  #   # Do the same thing for p_value history.
-  #   file_name = os.path.join(self.output_dir, "p_history.txt")
-  #   if not os.path.isfile(file_name):
-  #     f = open(file_name, 'w')
-  #     param_names = [obj.p_lookup[-1] for obj in self.p_objs]
-  #     str_to_write = '\t'.join(param_names) + '\n'
-  #   else:
-  #     f = open(file_name, 'a')
-  #     str_to_write = ""
+    # Do the same thing for p_value history.
+    file_name = os.path.join(self.output_dir, "p_history.txt")
+    if not os.path.isfile(file_name):
+      f = open(file_name, 'w')
+      param_names = [obj.p_lookup[-1] for obj in self.p_objs]
+      str_to_write = '\t'.join(param_names) + '\n'
+    else:
+      f = open(file_name, 'a')
+      str_to_write = ""
     
-  #   # Get the p values.
-  #   p_values = [str(obj.p_value) for obj in self.p_objs]
+    # Get the p values.
+    p_values = [str(obj.p_value) for obj in self.p_objs]
 
-  #   # Put the information in the string to write.
-  #   str_to_write += '\t'.join(p_values) + '\n'
+    # Put the information in the string to write.
+    str_to_write += '\t'.join(p_values) + '\n'
 
-  #   # Write the information for the parameters.
-  #   f.write(str_to_write)
+    # Write the information for the parameters.
+    f.write(str_to_write)
 
-  #   # Tidy up.
-  #   f.close()
+    # Tidy up.
+    f.close()
+
   def __recurs_read_param(self, key=None, this_dict=None, param_path=[]):
     """Recursively traverses the optimization dictionary structure to set p-values."""
     traverse = False
