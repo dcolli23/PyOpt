@@ -5,35 +5,26 @@ import subprocess
 
 import numpy as np
 
+from ._simulation_base import SimulationBase
+
 print ("WARNING: Currently relying on FiberSim repository outside of this repository. Refactor!!")
 sys.path.append("../../Models/FiberSim/Python_files/")
 from util import run, instruct, protocol
 
-class SimulationRunner:
+class SimulationRunner(SimulationBase):
   """Basic class for running simulations in "unintelligent" way"""
-  def __init__(self, fibersim_file, options_file, model_file, protocol_file, fit_mode, 
-    fit_variable, output_dir, target_data, time_steps_to_steady_state=2500, 
-    compute_rolling_average=False):
+  def __init__(self, fit_mode, fit_variable, target_data, time_steps_to_steady_state=2500, 
+    compute_rolling_average=False, *args, **kwargs):
     """Initializes a SimulationRunner object
     
     Parameters
     ----------
-    fibersim_file : str
-        The path to the FiberSim executable.
-    options_file : str
-        The path to the options file.
-    model_file : str
-        The path to the model file.
-    protocol_file : str
-        The path to the protocol file.
     fit_mode : str
         The mode with which this `SimulationRunner` is assessing its error. One of ["time", 
           "end_point"].
     fit_variable : str
         The variable with which the SimulationRunner should assess its error. Currently only valid
         option is "muscle_force".
-    output_dir : str
-        The path to the output directory for this simulation.
     target_data : str or numpy.ndarray
         Either the path to the target data for this simulation or a numpy.ndarray of the target 
         data.
@@ -43,13 +34,9 @@ class SimulationRunner:
     compute_rolling_average : bool, optional
         Whether to compute a rolling average of the data to smooth out signal, by default False.
     """
-    self.fibersim_file = fibersim_file
-    self.options_file = options_file
-    self.model_file = model_file
-    self.protocol_file = protocol_file
+    super().__init__(*args, **kwargs)
     self.fit_mode = fit_mode
     self.fit_variable = fit_variable
-    self.output_dir = output_dir
     self.target_data = target_data
     self.time_steps_to_steady_state = time_steps_to_steady_state
     self.compute_rolling_average = compute_rolling_average
@@ -90,7 +77,7 @@ class SimulationRunner:
       # Concatenate these back together to form the newly interpolated target data and store it.
       self.target_data = np.stack((times_to_interpolate, interpolated_values), axis=-1)
     elif self.fit_mode != "end_point":
-      raise RuntimeError("`Worker.fit_mode` not understood!")
+      raise RuntimeError("fit_mode parameter not understood!")
 
   def run_simulation(self):
     """Runs the simulation that you are optimizing"""
@@ -135,7 +122,7 @@ class SimulationRunner:
       simulation_end_point = np.mean(self.fit_data[-no_of_time_steps_to_avg:])
       error = np.sum((self.target_data - simulation_end_point)**2)
     else:
-      raise RuntimeError("Fit mode \"{}\" not support!".format(self.fit_mode))
+      raise RuntimeError("Fit mode \"{}\" not supported!".format(self.fit_mode))
 
     # Normalize the error so it does not depend on the number of time steps used.
     error /= self.target_data.shape[0]
