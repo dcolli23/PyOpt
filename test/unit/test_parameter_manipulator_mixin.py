@@ -107,29 +107,6 @@ def test_read_original_model_file():
   assert (pmm.model_dict == truth), ("ParameterManipulatorMixin did not read original model file "
     "correctly!")
 
-def test_recurs_read_param():
-  # Read in the optimization template dictionary.
-  with open(PARAM_DICT["optimization_template_file"], 'r') as f:
-    opt_template = json.load(f)
-  
-  pmm = ParameterManipulatorMixin()
-  pmm.p_objs = []
-  pmm.recurs_read_param(this_dict=opt_template)
-
-  obj_1_test = pmm.p_objs[0]
-  obj_2_test = pmm.p_objs[1]
-
-  obj_1_truth = ParamObject(600, 700, 0.85, "lin", ["kinetics", "rate_equations", "3@1"])
-  obj_2_truth = ParamObject(50, 150, 0.15, "lin", ["kinetics", "rate_equations", "5@1"])
-
-  obj_test = [obj_1_test, obj_2_test]
-  obj_truth = [obj_1_truth, obj_2_truth]
-  for i, ot in enumerate(obj_test):
-    for key, value in vars(ot).items():
-      test = value
-      truth = vars(obj_truth[i])[key]
-      assert (test == truth), ("ParameterManipulatorMixin did not set ParamObject correctly!")
-
 def test_read_optimization_structure():
   pmm = ParameterManipulatorMixin()
   pmm.p_objs = []

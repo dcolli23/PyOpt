@@ -129,49 +129,7 @@ class ParameterManipulatorMixin:
       self.optimization_template_dict = json.load(f)
     
     # Set the initial p_values by recursively searching the dictionary.
-    self.recurs_read_param(this_dict=self.optimization_template_dict)
-
-  def recurs_read_param(self, key=None, this_dict=None, param_path=[]):
-    """Recursively traverses the optimization dictionary structure to set p-values."""
-    traverse = False
-    if not key:
-      # We know this is the first function call in the recursive call and we need to traverse
-      # the dictionary.
-      traverse = True
-
-    elif isinstance(this_dict[key], dict):
-      # Add this key as a node to the parameter path.
-      param_path.append(key)
-
-      # We know this is a dictionary, check if it's an optimization dictionary with p-values.
-      if "p_value" not in this_dict[key].keys():
-        traverse = True
-        this_dict = this_dict[key]
-      
-      # Otherwise, we can set the p_value here.
-      else:
-        # Check to make sure the optimization template has been specified correctly.
-        p_mode = this_dict[key]["p_mode"]
-        p_min = this_dict[key]["min_value"]
-        p_max = this_dict[key]["max_value"]
-        p_value = this_dict[key]["p_value"]
-
-        assert (p_mode == "lin" or p_mode == "log"), (
-          "p_mode for parameter \"{}\" in optimization template must be \"lin\" or \"log\"!".format(
-            key))
-        assert (isinstance(p_value, (int, float))), (
-          "p_value for parameter \"{}\" in optimization template must be a number!".format(key))
-        assert (isinstance(p_min, (int, float))), (
-          "min_value for parameter \"{}\" in optimization template must be a number!".format(key))
-        assert (isinstance(p_max, (int, float))), (
-          "max_value for parameter \"{}\" in optimization template must be a number!".format(key))
-
-        # Store the values for this parameter.
-        self.p_objs.append( ParamObject(p_min, p_max, p_value, p_mode, param_path) )
-    
-    if traverse:
-      for sub_key in this_dict.keys():
-        self.recurs_read_param(key=sub_key, this_dict=this_dict, param_path=param_path.copy())
+    self.__recurs_read_param(this_dict=self.optimization_template_dict)
 
   def write_working_model_file(self):
     """Writes the working JSON model file into the class."""
@@ -237,3 +195,44 @@ class ParameterManipulatorMixin:
 
   #   # Tidy up.
   #   f.close()
+  def __recurs_read_param(self, key=None, this_dict=None, param_path=[]):
+    """Recursively traverses the optimization dictionary structure to set p-values."""
+    traverse = False
+    if not key:
+      # We know this is the first function call in the recursive call and we need to traverse
+      # the dictionary.
+      traverse = True
+
+    elif isinstance(this_dict[key], dict):
+      # Add this key as a node to the parameter path.
+      param_path.append(key)
+
+      # We know this is a dictionary, check if it's an optimization dictionary with p-values.
+      if "p_value" not in this_dict[key].keys():
+        traverse = True
+        this_dict = this_dict[key]
+      
+      # Otherwise, we can set the p_value here.
+      else:
+        # Check to make sure the optimization template has been specified correctly.
+        p_mode = this_dict[key]["p_mode"]
+        p_min = this_dict[key]["min_value"]
+        p_max = this_dict[key]["max_value"]
+        p_value = this_dict[key]["p_value"]
+
+        assert (p_mode == "lin" or p_mode == "log"), (
+          "p_mode for parameter \"{}\" in optimization template must be \"lin\" or \"log\"!".format(
+            key))
+        assert (isinstance(p_value, (int, float))), (
+          "p_value for parameter \"{}\" in optimization template must be a number!".format(key))
+        assert (isinstance(p_min, (int, float))), (
+          "min_value for parameter \"{}\" in optimization template must be a number!".format(key))
+        assert (isinstance(p_max, (int, float))), (
+          "max_value for parameter \"{}\" in optimization template must be a number!".format(key))
+
+        # Store the values for this parameter.
+        self.p_objs.append( ParamObject(p_min, p_max, p_value, p_mode, param_path) )
+    
+    if traverse:
+      for sub_key in this_dict.keys():
+        self.__recurs_read_param(key=sub_key, this_dict=this_dict, param_path=param_path.copy())
