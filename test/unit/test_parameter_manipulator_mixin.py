@@ -56,7 +56,7 @@ def test_mixin_read_options_file():
   pmm.read_options_file()
 
   # This is a shallow equivalence check but it will do for now since the options dictionary is flat.
-  assert (pmm.options_dict == options_truth), ("ParameterManipulationMixin did not read options "
+  assert (pmm.options_dict == options_truth), ("ParameterManipulatorMixin did not read options "
     "file correctly!")
 
 def test_set_regular_param():
@@ -144,9 +144,9 @@ def test_update_parameters():
 
   pmm.update_parameters()
 
-  assert (pmm.p_objs[0].calculated_value == param1_truth), ("ParameterManipulationMixin did not "
+  assert (pmm.p_objs[0].calculated_value == param1_truth), ("ParameterManipulatorMixin did not "
     "update parameter correctly!")
-  assert (pmm.p_objs[1].calculated_value == param2_truth), ("ParameterManipulationMixin did not "
+  assert (pmm.p_objs[1].calculated_value == param2_truth), ("ParameterManipulatorMixin did not "
     "update parameter correctly!")
 
 def test_param_dump():
@@ -167,13 +167,13 @@ def test_param_dump():
   param_dump = np.loadtxt(os.path.join(pmm.output_dir, "parameter_history.txt"), skiprows=1)
   p_dump = np.loadtxt(os.path.join(pmm.output_dir, "p_history.txt"), skiprows=1)
 
-  assert (param_dump[0] == param1_truth), ("ParameterManipulationMixin did not dump parameter "
+  assert (param_dump[0] == param1_truth), ("ParameterManipulatorMixin did not dump parameter "
     "correctly!")
-  assert (param_dump[1] == param2_truth), ("ParameterManipulationMixin did not dump parameter "
+  assert (param_dump[1] == param2_truth), ("ParameterManipulatorMixin did not dump parameter "
     "correctly!")
-  assert (p_dump[0] == pmm.p_values[0]), ("ParameterManipulationMixin did not dump p value "
+  assert (p_dump[0] == pmm.p_values[0]), ("ParameterManipulatorMixin did not dump p value "
     "correctly!")
-  assert (p_dump[1] == pmm.p_values[1]), ("ParameterManipulationMixin did not dump p value "
+  assert (p_dump[1] == pmm.p_values[1]), ("ParameterManipulatorMixin did not dump p value "
     "correctly!")
 
 def test_record_extreme_p_values():
@@ -199,5 +199,5 @@ WARNING: P value for parameter "3@1" < 0.05; iteration 1!
   with open(os.path.join(pmm.output_dir, "WARNINGS.log"), 'r') as f:
     warnings_text_test = f.read()
 
-  assert (warnings_text_test == warnings_text_truth), ("ParameterManipulationMixin did not record "
+  assert (warnings_text_test == warnings_text_truth), ("ParameterManipulatorMixin did not record "
     "p value/parameter value warnings correctly!")

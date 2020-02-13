@@ -18,11 +18,12 @@ import matplotlib.pyplot as plt
 
 from . import params
 from .simulation_runner import SimulationRunner
+from .parameter_manipulator_mixin import ParameterManipulatorMixin
 print ("WARNING: Currently relying on FiberSim repository outside of this repository. Refactor!!")
 sys.path.append("../../Models/FiberSim/Python_files/")
 from util import run, instruct, protocol
 
-class Worker(SimulationRunner):
+class Worker(ParameterManipulatorMixin, SimulationRunner):
   def __init__(self,
                original_model_file,
                working_model_file,
@@ -55,10 +56,10 @@ class Worker(SimulationRunner):
         the MethodType syntax. The function is bound to the object during initialization.
     """
     super().__init__(model_file=working_model_file, *args, **kwargs)
-    self.original_json_model_file_string = original_model_file
-    self.working_json_model_file_string = working_model_file
-    self.best_model_file_string = best_model_file
-    self.optimization_json_template_string = optimization_template_file
+    self.original_model_file = original_model_file
+    self.working_model_file = working_model_file
+    self.best_model_file = best_model_file
+    self.optimization_template_file = optimization_template_file
     self.display_progress = display_progress
     self.fig = optimization_figure
 
@@ -139,7 +140,7 @@ class Worker(SimulationRunner):
       self.best_error = this_error
 
       # Write the working model file as the best file.
-      with open(self.best_model_file_string, 'w') as f:
+      with open(self.best_model_file, 'w') as f:
         json.dump(self.model_dict, f, indent=2)
       
       # Call the callback for minimum error.
@@ -148,200 +149,200 @@ class Worker(SimulationRunner):
 
     return this_error
 
-  def read_options_file(self):
-    """Reads options file into class dictionary."""
-    with open(self.options_file, 'r') as f:
-      self.options_dict = json.load(f)
+  # def read_options_file(self):
+  #   """Reads options file into class dictionary."""
+  #   with open(self.options_file, 'r') as f:
+  #     self.options_dict = json.load(f)
 
-  def update_parameters(self):
-    """Updates the parameters for this worker from the p_vals array."""
-    for i in range(self.p_values.shape[0]):
-      # Update the parameter p_value from the array.
-      self.p_objs[i].p_value = self.p_values[i]
+  # def update_parameters(self):
+  #   """Updates the parameters for this worker from the p_vals array."""
+  #   for i in range(self.p_values.shape[0]):
+  #     # Update the parameter p_value from the array.
+  #     self.p_objs[i].p_value = self.p_values[i]
 
-      # Calculate the new parameter value.
-      new_param_val = self.p_objs[i].calculate_parameter()
+  #     # Calculate the new parameter value.
+  #     new_param_val = self.p_objs[i].calculate_parameter()
 
-      # Set the new parameter value.
-      self.recurs_update_parameter(self.p_objs[i].p_lookup.copy(), new_param_val)
+  #     # Set the new parameter value.
+  #     self.recurs_update_parameter(self.p_objs[i].p_lookup.copy(), new_param_val)
   
-  def record_extreme_p_values(self):
-    """Writes to WARNINGS.log in output directory when extreme p_values are encountered."""
-    idxs_greater = [i for i, p_value in enumerate(self.p_values) if p_value > 0.95]
-    idxs_lesser = [i for i, p_value in enumerate(self.p_values) if p_value < 0.05]
-    if idxs_greater:
-      # Get the names of the parameters that are too high.
-      with open(os.path.join(self.output_dir, "WARNINGS.log"), 'a+') as f:
-        str_to_write = ""
-        #for obj in self.p_objs[idxs_greater]:
-        for idx in idxs_greater:
-          obj = self.p_objs[idx]
-          str_to_write += "WARNING: P value for parameter \"{}\" > 0.95; iteration {}!\n".format(
-            obj.p_lookup[-1], self.iteration_number)
-          str_to_write += "\tvalue = {}\n".format(obj.p_value)
-        f.write(str_to_write)
-    if idxs_lesser:
-      # Get the names of the parameters that are too low.
-      with open(os.path.join(self.output_dir, "WARNINGS.log"), 'a+') as f:
-        str_to_write = ""
-        # for obj in self.p_objs[idxs_lesser]:
-        for idx in idxs_lesser:
-          obj = self.p_objs[idx]
-          str_to_write += "WARNING: P value for parameter \"{}\" < 0.05; iteration {}!\n".format(
-            obj.p_lookup[-1], self.iteration_number, ) 
-          str_to_write += "\tvalue = {}\n".format(obj.p_value) 
-        f.write(str_to_write)
+  # def record_extreme_p_values(self):
+  #   """Writes to WARNINGS.log in output directory when extreme p_values are encountered."""
+  #   idxs_greater = [i for i, p_value in enumerate(self.p_values) if p_value > 0.95]
+  #   idxs_lesser = [i for i, p_value in enumerate(self.p_values) if p_value < 0.05]
+  #   if idxs_greater:
+  #     # Get the names of the parameters that are too high.
+  #     with open(os.path.join(self.output_dir, "WARNINGS.log"), 'a+') as f:
+  #       str_to_write = ""
+  #       #for obj in self.p_objs[idxs_greater]:
+  #       for idx in idxs_greater:
+  #         obj = self.p_objs[idx]
+  #         str_to_write += "WARNING: P value for parameter \"{}\" > 0.95; iteration {}!\n".format(
+  #           obj.p_lookup[-1], self.iteration_number)
+  #         str_to_write += "\tvalue = {}\n".format(obj.p_value)
+  #       f.write(str_to_write)
+  #   if idxs_lesser:
+  #     # Get the names of the parameters that are too low.
+  #     with open(os.path.join(self.output_dir, "WARNINGS.log"), 'a+') as f:
+  #       str_to_write = ""
+  #       # for obj in self.p_objs[idxs_lesser]:
+  #       for idx in idxs_lesser:
+  #         obj = self.p_objs[idx]
+  #         str_to_write += "WARNING: P value for parameter \"{}\" < 0.05; iteration {}!\n".format(
+  #           obj.p_lookup[-1], self.iteration_number, ) 
+  #         str_to_write += "\tvalue = {}\n".format(obj.p_value) 
+  #       f.write(str_to_write)
 
-  def recurs_update_parameter(self, p_lookup, new_param_val, traversed_model_dict=None):
-    """Updates the parameter values for this worker in the model dictionary."""
-    # Get the new key for this node.
-    new_k = p_lookup.pop(0)
+  # def recurs_update_parameter(self, p_lookup, new_param_val, traversed_model_dict=None):
+  #   """Updates the parameter values for this worker in the model dictionary."""
+  #   # Get the new key for this node.
+  #   new_k = p_lookup.pop(0)
 
-    # Check to see if we're at the end of the parameter lookup path.
-    if len(p_lookup) > 0:
-      # Traverse the dictionary by one node.
-      if not traversed_model_dict:
-        traversed_model_dict = self.model_dict
-      traversed_model_dict = traversed_model_dict[new_k]
+  #   # Check to see if we're at the end of the parameter lookup path.
+  #   if len(p_lookup) > 0:
+  #     # Traverse the dictionary by one node.
+  #     if not traversed_model_dict:
+  #       traversed_model_dict = self.model_dict
+  #     traversed_model_dict = traversed_model_dict[new_k]
       
-      # Call the recursive function.
-      self.recurs_update_parameter(p_lookup, new_param_val, traversed_model_dict)
+  #     # Call the recursive function.
+  #     self.recurs_update_parameter(p_lookup, new_param_val, traversed_model_dict)
     
-    else:
-      # Check to see if this is a rate parameter to set.
-      if '@' in new_k:
-        self.set_rate_param(new_k, new_param_val, traversed_model_dict)
-      else:
-        self.set_regular_param(new_k, new_param_val, traversed_model_dict)
+  #   else:
+  #     # Check to see if this is a rate parameter to set.
+  #     if '@' in new_k:
+  #       self.set_rate_param(new_k, new_param_val, traversed_model_dict)
+  #     else:
+  #       self.set_regular_param(new_k, new_param_val, traversed_model_dict)
 
-  def set_rate_param(self, rate_key, new_value, traversed_model_dict):
-    """Sets the rate parameter that has been found by recurs_update_parameter."""
-    instruct.set_rate_param(rate_key, new_value, traversed_model_dict)
+  # def set_rate_param(self, rate_key, new_value, traversed_model_dict):
+  #   """Sets the rate parameter that has been found by recurs_update_parameter."""
+  #   instruct.set_rate_param(rate_key, new_value, traversed_model_dict)
 
-  def set_regular_param(self, param_key, new_value, traversed_model_dict):
-    """Sets the parameter in the model dictionary to the new value."""
-    traversed_model_dict[param_key] = new_value
+  # def set_regular_param(self, param_key, new_value, traversed_model_dict):
+  #   """Sets the parameter in the model dictionary to the new value."""
+  #   traversed_model_dict[param_key] = new_value
 
-  def read_optimization_structure(self):
-    """Reads the optimization structure into a dictionary.
+  # def read_optimization_structure(self):
+  #   """Reads the optimization structure into a dictionary.
     
-    Important note: Python 3.7 dictionaries now preserve insertion order so we can be sure that
-    the order of this dictionary will stay the same across the simulation. If we were using 
-    Python < 3.7, this would not be the case and we'd have to use an ordereddict.
-    """
-    # Read the optimization structure into the dictionary object.
-    with open(self.optimization_json_template_string, 'r') as f:
-      self.optimization_template_dict = json.load(f)
+  #   Important note: Python 3.7 dictionaries now preserve insertion order so we can be sure that
+  #   the order of this dictionary will stay the same across the simulation. If we were using 
+  #   Python < 3.7, this would not be the case and we'd have to use an ordereddict.
+  #   """
+  #   # Read the optimization structure into the dictionary object.
+  #   with open(self.optimization_json_template_string, 'r') as f:
+  #     self.optimization_template_dict = json.load(f)
     
-    # Set the initial p_values by recursively searching the dictionary.
-    self.recurs_read_param(this_dict=self.optimization_template_dict)
+  #   # Set the initial p_values by recursively searching the dictionary.
+  #   self.recurs_read_param(this_dict=self.optimization_template_dict)
 
-  def recurs_read_param(self, key=None, this_dict=None, param_path=[]):
-    """Recursively traverses the optimization dictionary structure to set p-values."""
-    traverse = False
-    if not key:
-      # We know this is the first function call in the recursive call and we need to traverse
-      # the dictionary.
-      traverse = True
+  # def recurs_read_param(self, key=None, this_dict=None, param_path=[]):
+  #   """Recursively traverses the optimization dictionary structure to set p-values."""
+  #   traverse = False
+  #   if not key:
+  #     # We know this is the first function call in the recursive call and we need to traverse
+  #     # the dictionary.
+  #     traverse = True
 
-    elif isinstance(this_dict[key], dict):
-      # Add this key as a node to the parameter path.
-      param_path.append(key)
+  #   elif isinstance(this_dict[key], dict):
+  #     # Add this key as a node to the parameter path.
+  #     param_path.append(key)
 
-      # We know this is a dictionary, check if it's an optimization dictionary with p-values.
-      if "p_value" not in this_dict[key].keys():
-        traverse = True
-        this_dict = this_dict[key]
+  #     # We know this is a dictionary, check if it's an optimization dictionary with p-values.
+  #     if "p_value" not in this_dict[key].keys():
+  #       traverse = True
+  #       this_dict = this_dict[key]
       
-      # Otherwise, we can set the p_value here.
-      else:
-        # Check to make sure the optimization template has been specified correctly.
-        p_mode = this_dict[key]["p_mode"]
-        p_min = this_dict[key]["min_value"]
-        p_max = this_dict[key]["max_value"]
-        p_value = this_dict[key]["p_value"]
+  #     # Otherwise, we can set the p_value here.
+  #     else:
+  #       # Check to make sure the optimization template has been specified correctly.
+  #       p_mode = this_dict[key]["p_mode"]
+  #       p_min = this_dict[key]["min_value"]
+  #       p_max = this_dict[key]["max_value"]
+  #       p_value = this_dict[key]["p_value"]
 
-        assert (p_mode == "lin" or p_mode == "log"), (
-          "p_mode for parameter \"{}\" in optimization template must be \"lin\" or \"log\"!".format(
-            key))
-        assert (isinstance(p_value, (int, float))), (
-          "p_value for parameter \"{}\" in optimization template must be a number!".format(key))
-        assert (isinstance(p_min, (int, float))), (
-          "min_value for parameter \"{}\" in optimization template must be a number!".format(key))
-        assert (isinstance(p_max, (int, float))), (
-          "max_value for parameter \"{}\" in optimization template must be a number!".format(key))
+  #       assert (p_mode == "lin" or p_mode == "log"), (
+  #         "p_mode for parameter \"{}\" in optimization template must be \"lin\" or \"log\"!".format(
+  #           key))
+  #       assert (isinstance(p_value, (int, float))), (
+  #         "p_value for parameter \"{}\" in optimization template must be a number!".format(key))
+  #       assert (isinstance(p_min, (int, float))), (
+  #         "min_value for parameter \"{}\" in optimization template must be a number!".format(key))
+  #       assert (isinstance(p_max, (int, float))), (
+  #         "max_value for parameter \"{}\" in optimization template must be a number!".format(key))
 
-        # Store the values for this parameter.
-        self.p_objs.append( params.ParamObject(p_min, p_max, p_value, p_mode, param_path) )
+  #       # Store the values for this parameter.
+  #       self.p_objs.append( params.ParamObject(p_min, p_max, p_value, p_mode, param_path) )
     
-    if traverse:
-      for sub_key in this_dict.keys():
-        self.recurs_read_param(key=sub_key, this_dict=this_dict, param_path=param_path.copy())
+  #   if traverse:
+  #     for sub_key in this_dict.keys():
+  #       self.recurs_read_param(key=sub_key, this_dict=this_dict, param_path=param_path.copy())
 
-  def write_working_model_file(self):
-    """Writes the working JSON model file into the class."""
-    with open(self.working_json_model_file_string, 'w') as f:
-      json.dump(self.model_dict, f, indent=2)
+  # def write_working_model_file(self):
+  #   """Writes the working JSON model file into the class."""
+  #   with open(self.working_json_model_file_string, 'w') as f:
+  #     json.dump(self.model_dict, f, indent=2)
 
-  def read_original_model_file(self):
-    """Reads the original JSON model file into the class."""
-    with open(self.original_json_model_file_string, 'r') as f:
-      self.model_dict = json.load(f)
+  # def read_original_model_file(self):
+  #   """Reads the original JSON model file into the class."""
+  #   with open(self.original_json_model_file_string, 'r') as f:
+  #     self.model_dict = json.load(f)
 
-  def dump_param_information(self):
-    """Dumps the parameter information for this iteration of the optimizer."""
-    # Get the file name.
-    file_name = os.path.join(self.output_dir, "parameter_history.txt")
+  # def dump_param_information(self):
+  #   """Dumps the parameter information for this iteration of the optimizer."""
+  #   # Get the file name.
+  #   file_name = os.path.join(self.output_dir, "parameter_history.txt")
 
-    # If the file hasn't been written yet, open it and write the headers.
-    if not os.path.isfile(file_name):
-      # Open the file for writing.
-      f = open(file_name, 'w')
+  #   # If the file hasn't been written yet, open it and write the headers.
+  #   if not os.path.isfile(file_name):
+  #     # Open the file for writing.
+  #     f = open(file_name, 'w')
 
-      # Get the parameter names.
-      param_names = [obj.p_lookup[-1] for obj in self.p_objs]
+  #     # Get the parameter names.
+  #     param_names = [obj.p_lookup[-1] for obj in self.p_objs]
 
-      # Write the headers.
-      str_to_write = '\t'.join(param_names) + '\n'
+  #     # Write the headers.
+  #     str_to_write = '\t'.join(param_names) + '\n'
 
-    else:
-      # Open the file for appending
-      f = open(file_name, 'a')
-      str_to_write = ""
+  #   else:
+  #     # Open the file for appending
+  #     f = open(file_name, 'a')
+  #     str_to_write = ""
     
-    # Get the parameter values.
-    param_values = [str(obj.calculated_value) for obj in self.p_objs]
+  #   # Get the parameter values.
+  #   param_values = [str(obj.calculated_value) for obj in self.p_objs]
 
-    # Put the information in the string to write.
-    str_to_write += '\t'.join(param_values) + '\n'
+  #   # Put the information in the string to write.
+  #   str_to_write += '\t'.join(param_values) + '\n'
 
-    # Write the information for the parameters.
-    f.write(str_to_write)
+  #   # Write the information for the parameters.
+  #   f.write(str_to_write)
 
-    # Tidy up.
-    f.close()
+  #   # Tidy up.
+  #   f.close()
 
-    # Do the same thing for p_value history.
-    file_name = os.path.join(self.output_dir, "p_history.txt")
-    if not os.path.isfile(file_name):
-      f = open(file_name, 'w')
-      param_names = [obj.p_lookup[-1] for obj in self.p_objs]
-      str_to_write = '\t'.join(param_names) + '\n'
-    else:
-      f = open(file_name, 'a')
-      str_to_write = ""
+  #   # Do the same thing for p_value history.
+  #   file_name = os.path.join(self.output_dir, "p_history.txt")
+  #   if not os.path.isfile(file_name):
+  #     f = open(file_name, 'w')
+  #     param_names = [obj.p_lookup[-1] for obj in self.p_objs]
+  #     str_to_write = '\t'.join(param_names) + '\n'
+  #   else:
+  #     f = open(file_name, 'a')
+  #     str_to_write = ""
     
-    # Get the p values.
-    p_values = [str(obj.p_value) for obj in self.p_objs]
+  #   # Get the p values.
+  #   p_values = [str(obj.p_value) for obj in self.p_objs]
 
-    # Put the information in the string to write.
-    str_to_write += '\t'.join(p_values) + '\n'
+  #   # Put the information in the string to write.
+  #   str_to_write += '\t'.join(p_values) + '\n'
 
-    # Write the information for the parameters.
-    f.write(str_to_write)
+  #   # Write the information for the parameters.
+  #   f.write(str_to_write)
 
-    # Tidy up.
-    f.close()
+  #   # Tidy up.
+  #   f.close()
 
   def initialize_optimization_figure(self):
     """Initializes the figure and starts plots for optimization plotting"""

@@ -12,7 +12,7 @@ import json
 sys.path.append("../../Models/FiberSim/Python_files/")
 from util import instruct
 
-from params import ParamObject
+from .params import ParamObject
 
 class ParameterManipulatorMixin:
   """Mixin class for manipulating parameters/instruction files from optimization templates."""
