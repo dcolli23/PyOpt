@@ -23,10 +23,10 @@ for path in os.listdir(TEST_RESULT_DIR):
 
 SB_DICT = {
   "fibersim_file":None,
-  "protocol_file": os.path.join(TEST_DATA_ROOT, "optimization_protocol.txt"),
-  "model_file": os.path.join(TEST_DATA_ROOT, "original_model.json"),
-  "options_file": os.path.join(TEST_DATA_ROOT, "sim_options.json"),
-  "output_dir": TEST_RESULT_DIR
+  "protocol_file":os.path.join(TEST_DATA_ROOT, "optimization_protocol.txt"),
+  "model_file":os.path.join(TEST_DATA_ROOT, "original_model.json"),
+  "options_file":os.path.join(TEST_DATA_ROOT, "sim_options.json"),
+  "output_dir":TEST_RESULT_DIR
 }
 
 def test_simulation_base_initialization():
