@@ -84,7 +84,7 @@ def test_write_working_model_file():
   truth = {"a":1}
 
   pmm = ParameterManipulatorMixin()
-  pmm.working_model_file = os.path.join(TEST_RESULT_DIR, "pmm_working_model_file")
+  pmm.working_model_file = PARAM_DICT["working_model_file"]
   pmm.model_dict = truth
   pmm.write_working_model_file()
 
@@ -92,3 +92,15 @@ def test_write_working_model_file():
     test = json.load(f)
 
   assert (test == truth), "ParameterManipulatorMixin did not write working model file correctly!"
+
+def test_read_original_model_file():
+  with open(PARAM_DICT["original_model_file"], 'r') as f:
+    truth = json.load(f)
+  
+  pmm = ParameterManipulatorMixin()
+  pmm.original_model_file = PARAM_DICT["original_model_file"]
+  pmm.read_original_model_file()
+
+  # Again, this is a shallow test of equivalence but this is fine for right now.
+  assert (pmm.model_dict == truth), ("ParameterManipulatorMixin did not read original model file "
+    "correctly!")
