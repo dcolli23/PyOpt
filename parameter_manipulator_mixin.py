@@ -5,8 +5,11 @@ Created on Thur Feb 13 11:20:00 2020
 
 Purpose: Mixin for manipulating parameters/instruction files from optimization template.
 """
-
+import sys
 import json
+
+sys.path.append("../../Models/FiberSim/Python_files/")
+from util import instruct
 
 class ParameterManipulatorMixin:
   """Mixin class for manipulating parameters/instruction files from optimization templates."""
@@ -76,9 +79,37 @@ class ParameterManipulatorMixin:
   #     else:
   #       self.set_regular_param(new_k, new_param_val, traversed_model_dict)
 
-  # def set_rate_param(self, rate_key, new_value, traversed_model_dict):
-  #   """Sets the rate parameter that has been found by recurs_update_parameter."""
-  #   instruct.set_rate_param(rate_key, new_value, traversed_model_dict)
+  def set_rate_param(self, rate_key, new_value, traversed_model_dict):
+    """Sets the rate parameter in the given traversed model dictionary
+    
+    Inputs:
+      rate_key -> str. The key for the rate equation number and parameter that you would like to 
+                  change. This is in the '@' notation. For example, if we want to change rate 
+                  equation 2, parameter 5, the rate_key would be "2@5".
+      new_value -> float. The new value you would like to update the rate parameter to.
+      traversed_model_dict -> list. The model dictionary traversed down to the "rate_equations" 
+                              object. For example, if you read in the model dictionary via the 
+                              'json' module, you would call this function using:
+                                model["kinetics"]["rate_equations"]
+    Example use:
+      If we read in the model file we would like to modify via the 'json' module into a dictionary 
+      called "model" and we want to set the first parameter of rate equation #5 to 10.0, we would call
+      this function as follows:
+        set_rate_param("5@1", 10.0, model["kinetics"]["rate_equations"])
+
+    Returns:
+      No return. This function modifies the dictionary. 
+    """
+    rate_eqn_idx, rate_param_idx = [int(i) - 1 for i in rate_key.split('@')]
+    
+    # Skip the pre-parameter information. 
+    rate_param_idx += 4
+
+    parsed_rate_eqn = traversed_model_dict[rate_eqn_idx].split()
+    parsed_rate_eqn[rate_param_idx] = str(new_value)
+
+    # Join and replace the parsed line.
+    traversed_model_dict[rate_eqn_idx] = "  ".join(parsed_rate_eqn)
 
   def set_regular_param(self, param_key, new_value, traversed_model_dict):
     """Sets the parameter in the model dictionary to the new value."""

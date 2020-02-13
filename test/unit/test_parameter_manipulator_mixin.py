@@ -60,3 +60,22 @@ def test_set_regular_param():
   pmm.set_regular_param("a", 2, test)
 
   assert (test["a"] == 2), "ParameterManipulatorMixin did not set regular param correctly!"
+
+def test_set_rate_param_mixin():
+  test = [
+    "1  gaussian  a - 33.958  0.0    0.0   0.0   -1.0   0.0    0.0",
+    "2  energy    d - 1.38    1.757  2.81  0.639  6.763 2.87   0.1",
+    "3  sig2      n - 5.88   20.96 -1.04  0.706  0.0   0.0    0.0",
+  ]
+
+  pmm = ParameterManipulatorMixin()
+  pmm.set_rate_param("1@3", 300, test)
+  pmm.set_rate_param("2@7", 0, test)
+  pmm.set_rate_param("3@1", 217, test)
+
+  for i, rate_eqn in enumerate(test):
+    test[i] = rate_eqn.split()
+  
+  assert (test[0][6] == '300'), "ParameterManipulatorMixin did not set rate param correctly!"
+  assert (test[1][10] == '0'), "ParameterManipulatorMixin did not set rate param correctly!"
+  assert (test[2][4] == '217'), "ParameterManipulatorMixin did not set rate param correctly!"
