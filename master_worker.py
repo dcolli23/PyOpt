@@ -14,56 +14,45 @@ import shutil
 
 import numpy as np
 import matplotlib.pyplot as plt
-# import imageio
 import cv2
 
-from . import worker
+from ._simulation_base import SimulationBase
+from .worker import Worker
 from . import display_util as du
 
-class MasterWorker:
+class MasterWorker(SimulationBase):
   """Class for particle swarm optimization."""
   def __init__(self,
-               fibersim_file_string,
-               protocol_file_string,
-               options_file_string,
                fit_mode,
                fit_variable,
-               original_json_model_file_string,
-               best_model_file_string,
-               optimization_json_template_string,
-               output_dir_string,
-               target_data_string,
+               original_model_file,
+               best_model_file,
+               optimization_template_file,
+               target_data,
                n_workers,
                time_steps_to_steady_state=2500,
                compute_rolling_average=False,
                display_progress=True,
                plot_animation_file_root="./plot_animation_",
                optimization_figure=None,
-               min_error_callback=None):
+               min_error_callback=None,
+               *args, **kwargs):
     """Initializes a MasterWorker object
     
     Parameters
     ----------
-    fibersim_file_string : str
-        The file path to the FiberSim executable.
-    protocol_file_string : str
-        The file path to the protocol file for this simulation.
-    options_file_string : str
-        The file path to the options file.
     fit_mode : str
         The fit mode for this simulation. Currently only accepts "time".
     fit_variable : str
         The variable that is being fit in this optimization job. Currently only accepts 
         "muscle_force".
-    original_json_model_file_string : str
+    original_model_file : str
         The file path to the original JSON model file.
-    best_model_file_string : str
+    best_model_file : str
         The file path to where the best model file will be saved.
-    optimization_json_template_string : str
+    optimization_template_file : str
         The file path to the optimization template, where the initial p-values are stored.
-    output_dir_string : str
-        The path to the output directory for this simulation.
-    target_data_string : str
+    target_data : str
         The file path to the target data. Must be in a two column format where the first column is
         the time and the second column is the data for the `fit_variable`. 
         Note:: The time column for this must currently be in 1 millisecond increments.
@@ -87,23 +76,20 @@ class MasterWorker:
         nothing happens upon reaching a new minimum error. If a function is specified, must be in
         the MethodType syntax. The function is bound to the object during initialization.
     """
-    self.fibersim_file_string = fibersim_file_string
-    self.protocol_file_string = protocol_file_string
-    self.options_file_string = options_file_string
+    super().__init__(model_file=original_model_file, *args, **kwargs)
     self.fit_mode = fit_mode
     self.fit_variable = fit_variable
-    self.original_json_model_file_string = original_json_model_file_string
-    self.best_model_file_string = best_model_file_string
-    self.optimization_json_template_string = optimization_json_template_string
-    self.output_dir_string = output_dir_string
-    self.target_data_string = target_data_string
+    self.original_model_file = original_model_file
+    self.best_model_file = best_model_file
+    self.optimization_template_file = optimization_template_file
+    self.target_data = target_data
     self.n_workers = n_workers
     self.time_steps_to_steady_state = time_steps_to_steady_state
     self.compute_rolling_average = compute_rolling_average
     self.display_progress = display_progress
     self.plot_animation_file_root = plot_animation_file_root
     self.fig = optimization_figure
-    self.optimization_output_dir = os.path.join(self.output_dir_string, "optimization_results")
+    self.optimization_output_dir = os.path.join(self.output_dir, "optimization_results")
     self.animation_output_dir = os.path.join(self.optimization_output_dir, "animation")
 
     # Graft the minimum error callback method onto this instance of MasterWorker.
@@ -145,15 +131,15 @@ class MasterWorker:
     """Initializes the workers that this MasterWorker controls"""
     # Create a the dictionary we'll use to initialize all of our workers.
     worker_dict = {
-      "fibersim_file_string":self.fibersim_file_string,
-      "protocol_file_string":self.protocol_file_string,
-      "options_file_string":self.options_file_string,
+      "fibersim_file":self.fibersim_file,
+      "protocol_file":self.protocol_file,
+      "options_file":self.options_file,
       "fit_mode":self.fit_mode,
       "fit_variable":self.fit_variable,
-      "original_json_model_file_string":self.original_json_model_file_string,
-      "best_model_file_string":self.best_model_file_string,
-      "optimization_json_template_string":self.optimization_json_template_string,
-      "target_data":self.target_data_string,
+      "original_model_file":self.original_model_file,
+      "best_model_file":self.best_model_file,
+      "optimization_template_file":self.optimization_template_file,
+      "target_data":self.target_data,
       "time_steps_to_steady_state":self.time_steps_to_steady_state,
       "compute_rolling_average":self.compute_rolling_average,
       "display_progress":False
@@ -162,20 +148,20 @@ class MasterWorker:
     # Create all of the workers.
     for i in range(self.n_workers):
       # We're going to create a new directory structure for each of our workers.
-      worker_base_dir = os.path.join(self.output_dir_string, "worker_" + str(i))
+      worker_base_dir = os.path.join(self.output_dir, "worker_" + str(i))
 
       # Add/modify the dictionary key/value pairs that the worker needs to be initialized.
-      worker_dict["working_json_model_file_string"] = os.path.join(worker_base_dir,
+      worker_dict["working_model_file"] = os.path.join(worker_base_dir,
         "working_model.json")
-      worker_dict["output_dir_string"] = os.path.join(worker_base_dir, "results")
+      worker_dict["output_dir"] = os.path.join(worker_base_dir, "results")
 
       # Clean any previously made worker directories and make a new one.
       if os.path.isdir(worker_base_dir):
         shutil.rmtree(worker_base_dir)
-      os.makedirs(worker_dict["output_dir_string"])
+      os.makedirs(worker_dict["output_dir"])
 
       # Initialize the worker.
-      worker_obj = worker.Worker(**worker_dict)
+      worker_obj = Worker(**worker_dict)
 
       # Add the worker to our list of workers.
       self.workers.append(worker_obj)

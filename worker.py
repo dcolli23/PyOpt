@@ -17,64 +17,33 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from . import params
+from .simulation_runner import SimulationRunner
 print ("WARNING: Currently relying on FiberSim repository outside of this repository. Refactor!!")
 sys.path.append("../../Models/FiberSim/Python_files/")
 from util import run, instruct, protocol
 
-class Worker:
+class Worker(SimulationRunner):
   def __init__(self,
-               fibersim_file_string,
-               protocol_file_string,
-               options_file_string,
-               fit_mode,
-               fit_variable,
-               original_json_model_file_string,
-               working_json_model_file_string,
-               best_model_file_string,
-               optimization_json_template_string,
-               output_dir_string,
-               target_data,
-               time_steps_to_steady_state=2500,
-               compute_rolling_average=False,
+               original_model_file,
+               working_model_file,
+               best_model_file,
+               optimization_template_file,
                display_progress=True,
                optimization_figure=None,
-               min_error_callback=None):
+               min_error_callback=None,
+               *args, **kwargs):
     """Initializes a MasterWorker object
     
     Parameters
     ----------
-    fibersim_file_string : str
-        The file path to the FiberSim executable.
-    protocol_file_string : str
-        The file path to the protocol file for this simulation.
-    options_file_string : str
-        The file path to the options file.
-    fit_mode : str
-        The fit mode for this simulation. Currently only accepts "time".
-    fit_variable : str
-        The variable that is being fit in this optimization job. Currently only accepts 
-        "muscle_force".
-    original_json_model_file_string : str
+    original_model_file : str
         The file path to the original JSON model file.
-    working_json_model_file_string: str
+    working_model_file: str
         The file path to the model file that is used to inform the current simulation.
-    best_model_file_string : str
+    best_model_file : str
         The file path to where the best model file will be saved.
-    optimization_json_template_string : str
+    optimization_template_file : str
         The file path to the optimization template, where the initial p-values are stored.
-    output_dir_string : str
-        The path to the output directory for this simulation.
-    target_data : str or numpy.ndarray
-        The file path to the target data or the previously read-in target data.
-        If using `fit_mode` == "time":
-          Must be in a two column format where the first column is
-          the time and the second column is the data for the `fit_variable`. 
-          Note:: The time column for this must currently be in 1 millisecond increments.
-    time_steps_to_steady_state : int, optional
-        The number of time steps it takes for FiberSim to reach steady state, by default 2500.
-    compute_rolling_average : bool, optional
-        Whether or not to compute a rolling average to smooth out any stochasticity, by default 
-        False.
     display_progress : bool, optional
         Whether to display the progress using multiple matplotlib plots, by default True.
     optimization_figure : matplotlib.figure, optional
@@ -85,19 +54,11 @@ class Worker:
         nothing happens upon reaching a new minimum error. If a function is specified, must be in
         the MethodType syntax. The function is bound to the object during initialization.
     """
-    self.fibersim_file_string = fibersim_file_string
-    self.protocol_file_string = protocol_file_string
-    self.options_file_string = options_file_string
-    self.fit_mode = fit_mode
-    self.fit_variable = fit_variable
-    self.original_json_model_file_string = original_json_model_file_string
-    self.working_json_model_file_string = working_json_model_file_string
-    self.best_model_file_string = best_model_file_string
-    self.optimization_json_template_string = optimization_json_template_string
-    self.output_dir_string = output_dir_string
-    self.target_data = target_data
-    self.time_steps_to_steady_state = time_steps_to_steady_state
-    self.compute_rolling_average = compute_rolling_average
+    super().__init__(model_file=working_model_file, *args, **kwargs)
+    self.original_json_model_file_string = original_model_file
+    self.working_json_model_file_string = working_model_file
+    self.best_model_file_string = best_model_file
+    self.optimization_json_template_string = optimization_template_file
     self.display_progress = display_progress
     self.fig = optimization_figure
 
@@ -124,13 +85,6 @@ class Worker:
     self.optimization_template_dict = {}
     self.model_dict = {}
 
-    # Read in the simulation times from the protocol file. We'll be using these for interpolating
-    # the target data.
-    self.sim_times = protocol.get_sim_time(self.protocol_file_string)
-
-    # Read in the data for the objective function.
-    self.read_target_data()
-
     # Read in the options file to set the number of repeats.
     self.read_options_file()
 
@@ -150,7 +104,7 @@ class Worker:
     # Delete the previous dumps if they're present.
     files_to_delete = ["parameter_history.txt", "p_history.txt", "errors.txt"]
     for file_name in files_to_delete:
-      file_name = os.path.join(self.output_dir_string, file_name)
+      file_name = os.path.join(self.output_dir, file_name)
       if os.path.isfile(file_name):
         os.remove(file_name)
 
@@ -194,40 +148,9 @@ class Worker:
 
     return this_error
 
-  def read_target_data(self):
-    """Reads in the objective function data and interpolates based on simulation times."""
-    if isinstance(self.target_data, str):
-      if self.fit_variable == "muscle_force":
-        print ("Assuming 'muscle_force' data is a formatted TXT file.")
-        self.target_data = np.loadtxt(self.target_data)
-
-        # Get the time step for the simulation.
-        delta_ts = [self.target_data[i+1, 0] - self.target_data[i, 0] for i in range(
-          self.target_data.shape[0] - 1)]
-        self.time_step = np.mean(delta_ts)
-
-        # Do some error-checking.
-        if not np.isclose(self.time_step, 0.001):
-          # raise RuntimeError("Time step other than 1 millisecond not supported!")
-          print ("WARNING: TIME STEPS OTHER THAN 1 MILLISECOND NOT SUPPORTED!")
-      else:
-        raise RuntimeError("Fit variable not recognized!!")
-    
-    if self.fit_mode == "time":
-      # Linearly interpolate the target data according to the simulation time steps.
-      times_to_interpolate = (np.asarray(self.sim_times[self.time_steps_to_steady_state:])
-        - self.sim_times[self.time_steps_to_steady_state])
-      interpolated_values = np.interp(times_to_interpolate, self.target_data[:, 0], 
-        self.target_data[:, 1])
-      
-      # Concatenate these back together to form the newly interpolated target data and store it.
-      self.target_data = np.stack((times_to_interpolate, interpolated_values), axis=-1)
-    elif self.fit_mode != "end_point":
-      raise RuntimeError("`Worker.fit_mode` not understood!")
-
   def read_options_file(self):
     """Reads options file into class dictionary."""
-    with open(self.options_file_string, 'r') as f:
+    with open(self.options_file, 'r') as f:
       self.options_dict = json.load(f)
 
   def update_parameters(self):
@@ -248,7 +171,7 @@ class Worker:
     idxs_lesser = [i for i, p_value in enumerate(self.p_values) if p_value < 0.05]
     if idxs_greater:
       # Get the names of the parameters that are too high.
-      with open(os.path.join(self.output_dir_string, "WARNINGS.log"), 'a+') as f:
+      with open(os.path.join(self.output_dir, "WARNINGS.log"), 'a+') as f:
         str_to_write = ""
         #for obj in self.p_objs[idxs_greater]:
         for idx in idxs_greater:
@@ -259,7 +182,7 @@ class Worker:
         f.write(str_to_write)
     if idxs_lesser:
       # Get the names of the parameters that are too low.
-      with open(os.path.join(self.output_dir_string, "WARNINGS.log"), 'a+') as f:
+      with open(os.path.join(self.output_dir, "WARNINGS.log"), 'a+') as f:
         str_to_write = ""
         # for obj in self.p_objs[idxs_lesser]:
         for idx in idxs_lesser:
@@ -365,53 +288,10 @@ class Worker:
     with open(self.original_json_model_file_string, 'r') as f:
       self.model_dict = json.load(f)
 
-  def read_simulation_results(self):
-    """Returns an averaged result value from the repeats ran by run_fibersim_simulation()."""      
-    # Check which optimization mode we're using to point to the right file.
-    if self.fit_variable == "muscle_force":
-      file_str = "forces.txt"
-    else:
-      raise RuntimeError("Can't optimize anything but 'muscle_force'!!!")
-    
-    full_path = os.path.join(self.output_dir_string, file_str)
-
-    # Read in the appropriate results file.
-    if self.fit_variable == "muscle_force":
-      # Just pull out the total muscle force from the forces file. This is in the last column
-      # of the file.
-      self.fit_data = np.loadtxt(full_path, skiprows=1)[:, -1]
-
-    # Do the rolling average if we so choose.
-    if self.compute_rolling_average:
-      rolling_window_size = 5
-      self.fit_data = np.convolve(self.fit_data, 
-        np.ones(rolling_window_size), 'valid') / rolling_window_size
-
-  def get_simulation_error(self):
-    """Returns the error for this simulation based on the objective function."""
-    if self.fit_mode == "time":
-      error = np.sum((self.fit_data[self.time_steps_to_steady_state:] - self.target_data[:,1])**2)
-    elif self.fit_mode == "end_point":
-      # Average the last 10 time points
-      no_of_time_steps_to_avg = 10
-      no_of_time_steps_to_avg = min([self.fit_data.shape[0], no_of_time_steps_to_avg])
-      simulation_end_point = np.mean(self.fit_data[-no_of_time_steps_to_avg:])
-      error = np.sum((self.target_data - simulation_end_point)**2)
-    else:
-      raise RuntimeError("Fit mode \"{}\" not support!".format(self.fit_mode))
-
-    # Normalize the error so it does not depend on the number of time steps used.
-    error /= self.target_data.shape[0]
-
-    # Normalize the error to the range of the y data.
-    error /= np.max(self.target_data)
-    
-    return error
-  
   def dump_param_information(self):
     """Dumps the parameter information for this iteration of the optimizer."""
     # Get the file name.
-    file_name = os.path.join(self.output_dir_string, "parameter_history.txt")
+    file_name = os.path.join(self.output_dir, "parameter_history.txt")
 
     # If the file hasn't been written yet, open it and write the headers.
     if not os.path.isfile(file_name):
@@ -442,7 +322,7 @@ class Worker:
     f.close()
 
     # Do the same thing for p_value history.
-    file_name = os.path.join(self.output_dir_string, "p_history.txt")
+    file_name = os.path.join(self.output_dir, "p_history.txt")
     if not os.path.isfile(file_name):
       f = open(file_name, 'w')
       param_names = [obj.p_lookup[-1] for obj in self.p_objs]
@@ -554,7 +434,7 @@ class Worker:
     self.error_values.append(this_error)
 
     # Dump the error information.
-    with open(os.path.join(self.output_dir_string, "errors.txt"), 'a+') as f:
+    with open(os.path.join(self.output_dir, "errors.txt"), 'a+') as f:
       f.write(str(this_error)+'\n')
 
     for i in range(self.p_values.shape[0]):
@@ -563,10 +443,3 @@ class Worker:
     self.dump_param_information()
 
     if self.display_progress: self.update_plots()
-
-  def run_simulation(self):
-    """Runs the simulation that you are optimizing"""
-    exit_code = run.fibersim_simulation(self.fibersim_file_string, self.options_file_string,
-      self.working_json_model_file_string, self.protocol_file_string, self.output_dir_string,
-      continuous_output=False)
-    return exit_code
