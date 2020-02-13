@@ -2,10 +2,10 @@
 import os
 import sys
 import copy
+import shutil
+
 import pytest
-
 import matplotlib.pyplot as plt
-
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
 PYOPT_ROOT = os.path.join(ROOT, "..", "..")
@@ -15,17 +15,25 @@ from PyOpt import master_worker
 TEST_DATA_ROOT = os.path.join(ROOT, "..", "data", "unit")
 TEST_RESULT_DIR = os.path.join(ROOT, "..", "output", "unit")
 
+# Clear out the previous test results.
+for path in os.listdir(TEST_RESULT_DIR):
+  path = os.path.join(TEST_RESULT_DIR, path)
+  if os.path.isdir(path):
+    shutil.rmtree(path)
+  elif os.path.isfile(path):
+    os.remove(path)
+
 MASTER_WORKER_DICT = {
-  "fibersim_file_string": None,
-  "protocol_file_string": os.path.join(TEST_DATA_ROOT, "optimization_protocol.txt"),
-  "options_file_string": os.path.join(TEST_DATA_ROOT, "sim_options.json"),
+  "fibersim_file": None,
+  "protocol_file": os.path.join(TEST_DATA_ROOT, "optimization_protocol.txt"),
+  "options_file": os.path.join(TEST_DATA_ROOT, "sim_options.json"),
   "fit_mode": "time",
   "fit_variable": "muscle_force",
-  "original_json_model_file_string": os.path.join(TEST_DATA_ROOT, "original_model.json"),
-  "best_model_file_string": os.path.join(TEST_RESULT_DIR, "best_model.json"),
-  "optimization_json_template_string": os.path.join(TEST_DATA_ROOT, "optimization_template.json"),
-  "output_dir_string": TEST_RESULT_DIR,
-  "target_data_string": os.path.join(TEST_DATA_ROOT, "forces.txt"),
+  "original_model_file": os.path.join(TEST_DATA_ROOT, "original_model.json"),
+  "best_model_file": os.path.join(TEST_RESULT_DIR, "best_model.json"),
+  "optimization_template_file": os.path.join(TEST_DATA_ROOT, "optimization_template.json"),
+  "output_dir": TEST_RESULT_DIR,
+  "target_data": os.path.join(TEST_DATA_ROOT, "target_data_muscle_force.txt"),
   "n_workers": 2,
   "time_steps_to_steady_state":1,
   "compute_rolling_average":False,
