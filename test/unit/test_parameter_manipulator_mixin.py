@@ -79,3 +79,16 @@ def test_set_rate_param_mixin():
   assert (test[0][6] == '300'), "ParameterManipulatorMixin did not set rate param correctly!"
   assert (test[1][10] == '0'), "ParameterManipulatorMixin did not set rate param correctly!"
   assert (test[2][4] == '217'), "ParameterManipulatorMixin did not set rate param correctly!"
+
+def test_write_working_model_file():
+  truth = {"a":1}
+
+  pmm = ParameterManipulatorMixin()
+  pmm.working_model_file = os.path.join(TEST_RESULT_DIR, "pmm_working_model_file")
+  pmm.model_dict = truth
+  pmm.write_working_model_file()
+
+  with open(pmm.working_model_file, 'r') as f:
+    test = json.load(f)
+
+  assert (test == truth), "ParameterManipulatorMixin did not write working model file correctly!"

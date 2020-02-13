@@ -171,10 +171,10 @@ class ParameterManipulatorMixin:
   #     for sub_key in this_dict.keys():
   #       self.recurs_read_param(key=sub_key, this_dict=this_dict, param_path=param_path.copy())
 
-  # def write_working_model_file(self):
-  #   """Writes the working JSON model file into the class."""
-  #   with open(self.working_json_model_file_string, 'w') as f:
-  #     json.dump(self.model_dict, f, indent=2)
+  def write_working_model_file(self):
+    """Writes the working JSON model file into the class."""
+    with open(self.working_model_file, 'w') as f:
+      json.dump(self.model_dict, f, indent=2)
 
   # def read_original_model_file(self):
   #   """Reads the original JSON model file into the class."""
