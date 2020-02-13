@@ -7,6 +7,7 @@ import json
 
 import pytest
 import matplotlib.pyplot as plt
+import numpy as np
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
 PYOPT_ROOT = os.path.join(ROOT, "..", "..")
@@ -126,3 +127,25 @@ def test_read_optimization_structure():
       test = value
       truth = vars(obj_truth[i])[key]
       assert (test == truth), ("ParameterManipulatorMixin did not set ParamObject correctly!")
+
+def test_update_parameters():
+  pmm = ParameterManipulatorMixin()
+  pmm.p_values = np.asarray([0.5, 0.5])
+  pmm.p_objs = []
+  pmm.original_model_file = PARAM_DICT["original_model_file"]
+  pmm.read_original_model_file()
+  pmm.optimization_template_file = PARAM_DICT["optimization_template_file"]
+  pmm.read_optimization_structure()
+
+  param1_truth = 650
+  param2_truth = 100
+
+  pmm.update_parameters()
+
+  assert (pmm.p_objs[0].calculated_value == param1_truth), ("ParameterManipulationMixin did not "
+    "update parameter correctly!")
+  assert (pmm.p_objs[1].calculated_value == param2_truth), ("ParameterManipulationMixin did not "
+    "update parameter correctly!")
+
+
+

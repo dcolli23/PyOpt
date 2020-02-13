@@ -20,17 +20,17 @@ class ParameterManipulatorMixin:
     with open(self.options_file, 'r') as f:
       self.options_dict = json.load(f)
 
-  # def update_parameters(self):
-  #   """Updates the parameters for this worker from the p_vals array."""
-  #   for i in range(self.p_values.shape[0]):
-  #     # Update the parameter p_value from the array.
-  #     self.p_objs[i].p_value = self.p_values[i]
+  def update_parameters(self):
+    """Updates the parameters for this worker from the p_vals array."""
+    for i in range(self.p_values.shape[0]):
+      # Update the parameter p_value from the array.
+      self.p_objs[i].p_value = self.p_values[i]
 
-  #     # Calculate the new parameter value.
-  #     new_param_val = self.p_objs[i].calculate_parameter()
+      # Calculate the new parameter value.
+      new_param_val = self.p_objs[i].calculate_parameter()
 
-  #     # Set the new parameter value.
-  #     self.recurs_update_parameter(self.p_objs[i].p_lookup.copy(), new_param_val)
+      # Set the new parameter value.
+      self.__recurs_update_parameter(self.p_objs[i].p_lookup.copy(), new_param_val)
   
   # def record_extreme_p_values(self):
   #   """Writes to WARNINGS.log in output directory when extreme p_values are encountered."""
@@ -58,28 +58,6 @@ class ParameterManipulatorMixin:
   #           obj.p_lookup[-1], self.iteration_number, ) 
   #         str_to_write += "\tvalue = {}\n".format(obj.p_value) 
   #       f.write(str_to_write)
-
-  # def recurs_update_parameter(self, p_lookup, new_param_val, traversed_model_dict=None):
-  #   """Updates the parameter values for this worker in the model dictionary."""
-  #   # Get the new key for this node.
-  #   new_k = p_lookup.pop(0)
-
-  #   # Check to see if we're at the end of the parameter lookup path.
-  #   if len(p_lookup) > 0:
-  #     # Traverse the dictionary by one node.
-  #     if not traversed_model_dict:
-  #       traversed_model_dict = self.model_dict
-  #     traversed_model_dict = traversed_model_dict[new_k]
-      
-  #     # Call the recursive function.
-  #     self.recurs_update_parameter(p_lookup, new_param_val, traversed_model_dict)
-    
-  #   else:
-  #     # Check to see if this is a rate parameter to set.
-  #     if '@' in new_k:
-  #       self.set_rate_param(new_k, new_param_val, traversed_model_dict)
-  #     else:
-  #       self.set_regular_param(new_k, new_param_val, traversed_model_dict)
 
   def set_rate_param(self, rate_key, new_value, traversed_model_dict):
     """Sets the rate parameter in the given traversed model dictionary
@@ -236,3 +214,25 @@ class ParameterManipulatorMixin:
     if traverse:
       for sub_key in this_dict.keys():
         self.__recurs_read_param(key=sub_key, this_dict=this_dict, param_path=param_path.copy())
+
+  def __recurs_update_parameter(self, p_lookup, new_param_val, traversed_model_dict=None):
+    """Updates the parameter values for this worker in the model dictionary."""
+    # Get the new key for this node.
+    new_k = p_lookup.pop(0)
+
+    # Check to see if we're at the end of the parameter lookup path.
+    if len(p_lookup) > 0:
+      # Traverse the dictionary by one node.
+      if not traversed_model_dict:
+        traversed_model_dict = self.model_dict
+      traversed_model_dict = traversed_model_dict[new_k]
+      
+      # Call the recursive function.
+      self.__recurs_update_parameter(p_lookup, new_param_val, traversed_model_dict)
+    
+    else:
+      # Check to see if this is a rate parameter to set.
+      if '@' in new_k:
+        self.set_rate_param(new_k, new_param_val, traversed_model_dict)
+      else:
+        self.set_regular_param(new_k, new_param_val, traversed_model_dict)
