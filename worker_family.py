@@ -10,7 +10,8 @@ Purpose: WorkerFamily class for fitting a family of simulations. Can be called b
 import os
 import shutil
 
-from PyOpt import worker
+from .worker import Worker
+from .simulation_runner import SimulationRunner
 
 
 class WorkerFamily:
@@ -68,35 +69,30 @@ class WorkerFamily:
     self.error_values = []
 
     child_dict = {
-      "fibersim_file_string":self.fibersim_file,
-      "options_file_string":self.options_file,
+      "fibersim_file":self.fibersim_file,
+      "options_file":self.options_file,
+      "model_file":self.original_model_file,
       "fit_mode":self.fit_mode,
       "fit_variable":self.fit_variable,
-      "original_json_model_file_string":self.original_model_file,
-      "best_model_file_string":self.best_model_file,
-      "optimization_json_template_string":self.optimization_template_file,
       "target_data":self.target_data,
       "time_steps_to_steady_state":self.time_steps_to_steady_state,
       "compute_rolling_average":self.compute_rolling_average,
-      "display_progress":False
     }
 
     # Initialize a Worker for each protocol file.
     for i, prot_file in enumerate(self.protocol_files):
       # Create a new directory structure for each of the family's children.
       child_base_dir = os.path.join(self.output_dir, "child_"+str(i))
-      child_dict["protocol_file_string"] = prot_file
-      child_dict["working_json_model_file_string"] = os.path.join(child_base_dir, 
-        "working_model.json")
-      child_dict["output_dir_string"] = os.path.join(child_base_dir, "results")
+      child_dict["protocol_file"] = prot_file
+      child_dict["output_dir"] = os.path.join(child_base_dir, "results")
 
       # Clean any previously made child directories and make a new one.
       if os.path.isdir(child_base_dir):
         shutil.rmtree(child_base_dir)
-      os.makedirs(child_dict["output_dir_string"])
+      os.makedirs(child_dict["output_dir"])
 
       # Initialize the child.
-      child_obj = worker.Worker(**child_dict)
+      child_obj = SimulationRunner(**child_dict)
       self.children.append(child_obj)
 
   def fit(self, p_value_array):
@@ -107,7 +103,7 @@ class WorkerFamily:
     for i, child in enumerate(self.children):
       print ("Running child #{}/{}".format(i + 1, len(self.children)))
       error += child.fit_worker(p_value_array)
-      child.dump_param_information()
+      # child.dump_param_information()
 
     # if error < min(self.error_values):
 
