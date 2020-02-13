@@ -33,32 +33,32 @@ class ParameterManipulatorMixin:
       # Set the new parameter value.
       self.__recurs_update_parameter(self.p_objs[i].p_lookup.copy(), new_param_val)
   
-  # def record_extreme_p_values(self):
-  #   """Writes to WARNINGS.log in output directory when extreme p_values are encountered."""
-  #   idxs_greater = [i for i, p_value in enumerate(self.p_values) if p_value > 0.95]
-  #   idxs_lesser = [i for i, p_value in enumerate(self.p_values) if p_value < 0.05]
-  #   if idxs_greater:
-  #     # Get the names of the parameters that are too high.
-  #     with open(os.path.join(self.output_dir, "WARNINGS.log"), 'a+') as f:
-  #       str_to_write = ""
-  #       #for obj in self.p_objs[idxs_greater]:
-  #       for idx in idxs_greater:
-  #         obj = self.p_objs[idx]
-  #         str_to_write += "WARNING: P value for parameter \"{}\" > 0.95; iteration {}!\n".format(
-  #           obj.p_lookup[-1], self.iteration_number)
-  #         str_to_write += "\tvalue = {}\n".format(obj.p_value)
-  #       f.write(str_to_write)
-  #   if idxs_lesser:
-  #     # Get the names of the parameters that are too low.
-  #     with open(os.path.join(self.output_dir, "WARNINGS.log"), 'a+') as f:
-  #       str_to_write = ""
-  #       # for obj in self.p_objs[idxs_lesser]:
-  #       for idx in idxs_lesser:
-  #         obj = self.p_objs[idx]
-  #         str_to_write += "WARNING: P value for parameter \"{}\" < 0.05; iteration {}!\n".format(
-  #           obj.p_lookup[-1], self.iteration_number, ) 
-  #         str_to_write += "\tvalue = {}\n".format(obj.p_value) 
-  #       f.write(str_to_write)
+  def record_extreme_p_values(self):
+    """Writes to WARNINGS.log in output directory when extreme p_values are encountered."""
+    idxs_greater = [i for i, p_value in enumerate(self.p_values) if p_value > 0.95]
+    idxs_lesser = [i for i, p_value in enumerate(self.p_values) if p_value < 0.05]
+    if idxs_greater:
+      # Get the names of the parameters that are too high.
+      with open(os.path.join(self.output_dir, "WARNINGS.log"), 'a+') as f:
+        str_to_write = ""
+        #for obj in self.p_objs[idxs_greater]:
+        for idx in idxs_greater:
+          obj = self.p_objs[idx]
+          str_to_write += "WARNING: P value for parameter \"{}\" > 0.95; iteration {}!\n".format(
+            obj.p_lookup[-1], self.iteration_number)
+          str_to_write += "\tvalue = {}\n".format(obj.p_value)
+        f.write(str_to_write)
+    if idxs_lesser:
+      # Get the names of the parameters that are too low.
+      with open(os.path.join(self.output_dir, "WARNINGS.log"), 'a+') as f:
+        str_to_write = ""
+        # for obj in self.p_objs[idxs_lesser]:
+        for idx in idxs_lesser:
+          obj = self.p_objs[idx]
+          str_to_write += "WARNING: P value for parameter \"{}\" < 0.05; iteration {}!\n".format(
+            obj.p_lookup[-1], self.iteration_number, ) 
+          str_to_write += "\tvalue = {}\n".format(obj.p_value) 
+        f.write(str_to_write)
 
   def set_rate_param(self, rate_key, new_value, traversed_model_dict):
     """Sets the rate parameter in the given traversed model dictionary

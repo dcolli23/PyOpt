@@ -25,6 +25,8 @@ for path in os.listdir(TEST_RESULT_DIR):
   path = os.path.join(TEST_RESULT_DIR, path)
   if os.path.isdir(path):
     shutil.rmtree(path)
+  elif os.path.isfile(path):
+    os.remove(path)
 
 PARAM_DICT = {
   "fibersim_file": None,
@@ -174,3 +176,28 @@ def test_param_dump():
   assert (p_dump[1] == pmm.p_values[1]), ("ParameterManipulationMixin did not dump p value "
     "correctly!")
 
+def test_record_extreme_p_values():
+  pmm = ParameterManipulatorMixin()
+  pmm.p_values = np.asarray([0.01, 0.99])
+  pmm.p_objs = []
+  pmm.output_dir = PARAM_DICT["output_dir"]
+  pmm.iteration_number = 1
+  pmm.original_model_file = PARAM_DICT["original_model_file"]
+  pmm.read_original_model_file()
+  pmm.optimization_template_file = PARAM_DICT["optimization_template_file"]
+  pmm.read_optimization_structure()
+  pmm.update_parameters()
+
+  pmm.record_extreme_p_values()
+
+  warnings_text_truth = (
+"""WARNING: P value for parameter "5@1" > 0.95; iteration 1!
+	value = 0.99
+WARNING: P value for parameter "3@1" < 0.05; iteration 1!
+	value = 0.01
+""")
+  with open(os.path.join(pmm.output_dir, "WARNINGS.log"), 'r') as f:
+    warnings_text_test = f.read()
+
+  assert (warnings_text_test == warnings_text_truth), ("ParameterManipulationMixin did not record "
+    "p value/parameter value warnings correctly!")
