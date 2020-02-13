@@ -20,6 +20,8 @@ for path in os.listdir(TEST_RESULT_DIR):
   path = os.path.join(TEST_RESULT_DIR, path)
   if os.path.isdir(path):
     shutil.rmtree(path)
+  elif os.path.isfile(path):
+    os.remove(path)
 
 WF_DICT = {
   "fibersim_file": None,

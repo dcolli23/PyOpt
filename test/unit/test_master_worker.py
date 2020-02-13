@@ -7,7 +7,6 @@ import shutil
 import pytest
 import matplotlib.pyplot as plt
 
-
 ROOT = os.path.realpath(os.path.dirname(__file__))
 PYOPT_ROOT = os.path.join(ROOT, "..", "..")
 sys.path.append(os.path.join(PYOPT_ROOT, ".."))
@@ -21,6 +20,8 @@ for path in os.listdir(TEST_RESULT_DIR):
   path = os.path.join(TEST_RESULT_DIR, path)
   if os.path.isdir(path):
     shutil.rmtree(path)
+  elif os.path.isfile(path):
+    os.remove(path)
 
 MASTER_WORKER_DICT = {
   "fibersim_file": None,
