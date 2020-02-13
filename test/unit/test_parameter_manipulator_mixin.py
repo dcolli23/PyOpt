@@ -84,6 +84,22 @@ def test_write_working_model_file():
 
   assert (test == truth), "ParameterManipulatorMixin did not write working model file correctly!"
 
+def test_write_best_model_file():
+  pmm = ParameterManipulatorMixin()
+  pmm.original_model_file = PARAM_DICT["original_model_file"]
+  pmm.best_model_file = PARAM_DICT["best_model_file"]
+  pmm.read_original_model_file()
+  pmm.write_best_model_file()
+
+  with open(pmm.original_model_file, 'r') as f:
+    model_truth = json.load(f)
+  with open(pmm.best_model_file, 'r') as f:
+    model_test = json.load(f)
+
+  # shallow equivalence test.
+  assert (model_test == model_truth), ("ParameterManipulatorMixin did not write best model "
+    "correctly!")
+
 def test_read_original_model_file():
   with open(PARAM_DICT["original_model_file"], 'r') as f:
     truth = json.load(f)

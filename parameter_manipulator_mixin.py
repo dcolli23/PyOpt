@@ -127,6 +127,10 @@ class ParameterManipulatorMixin:
     with open(self.working_model_file, 'w') as f:
       json.dump(self.model_dict, f, indent=2)
 
+  def write_best_model_file(self):
+    with open(self.best_model_file, 'w') as f:
+      json.dump(self.model_dict, f)
+
   def read_original_model_file(self):
     """Reads the original JSON model file into the class."""
     with open(self.original_model_file, 'r') as f:

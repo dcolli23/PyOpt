@@ -114,9 +114,7 @@ class Worker(ParameterManipulatorMixin, SimulationRunner):
     if this_error < self.best_error:
       self.best_error = this_error
 
-      # Write the working model file as the best file.
-      with open(self.best_model_file, 'w') as f:
-        json.dump(self.model_dict, f, indent=2)
+      self.write_best_model_file()
       
       # Call the callback for minimum error.
       if self.min_error_callback:
