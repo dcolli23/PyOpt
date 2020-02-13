@@ -9,6 +9,8 @@ import os
 import sys
 import json
 
+import numpy as np
+
 sys.path.append("../../Models/FiberSim/Python_files/")
 from util import instruct
 
@@ -16,6 +18,24 @@ from .params import ParamObject
 
 class ParameterManipulatorMixin:
   """Mixin class for manipulating parameters/instruction files from optimization templates."""
+  def setup_parameters(self):
+    """Sets up all of the class attributes necessary to manipulate parameters"""
+    # Initialize the empty parameter interpolation lists.
+    self.p_objs = []
+
+    # Read in the options file to set the number of repeats.
+    self.read_options_file()
+
+    # Read in the original JSON model file.
+    self.read_original_model_file()
+
+    # Read in the optimization structure.
+    self.read_optimization_structure()
+
+    # Form the initial p_value array and p-value history.
+    self.p_values = np.asarray([obj.p_value for obj in self.p_objs])
+    self.p_value_history = [[obj.p_value] for obj in self.p_objs]
+
   def read_options_file(self):
     """Reads options file into class dictionary."""
     with open(self.options_file, 'r') as f:

@@ -12,13 +12,15 @@ import shutil
 
 from .worker import Worker
 from .simulation_runner import SimulationRunner
+from .parameter_manipulator_mixin import ParameterManipulatorMixin
 
 
-class WorkerFamily:
+class WorkerFamily(ParameterManipulatorMixin):
   """Class for fitting a family of simulations"""
-  def __init__(self, fibersim_file, options_file, original_model_file, best_model_file, 
-    protocol_files, fit_mode, fit_variable, optimization_template_file, output_dir, target_data, 
-    time_steps_to_steady_state=2500, compute_rolling_average=False, display_progress=False):
+  def __init__(self, fibersim_file, options_file, original_model_file, working_model_file, 
+    best_model_file, protocol_files, fit_mode, fit_variable, optimization_template_file, output_dir,
+    target_data, time_steps_to_steady_state=2500, compute_rolling_average=False, 
+    display_progress=False):
     """Initializes a WorkerFamily object
     
     Parameters
@@ -29,6 +31,8 @@ class WorkerFamily:
         Path to the options file.
     original_model_file : str
         Path to the original model file.
+    working_model_file : str
+        Path to the working model file. This is overwritten and thus should not be an existing file.
     best_model_file : str
         Path to where the best model file should be stored.
     protocol_files : list of str
@@ -55,6 +59,7 @@ class WorkerFamily:
     self.fibersim_file = fibersim_file
     self.options_file = options_file
     self.original_model_file = original_model_file
+    self.working_model_file = working_model_file
     self.best_model_file = best_model_file 
     self.protocol_files = protocol_files
     self.fit_mode = fit_mode
@@ -79,7 +84,7 @@ class WorkerFamily:
       "compute_rolling_average":self.compute_rolling_average,
     }
 
-    # Initialize a Worker for each protocol file.
+    # Initialize a child for each protocol file.
     for i, prot_file in enumerate(self.protocol_files):
       # Create a new directory structure for each of the family's children.
       child_base_dir = os.path.join(self.output_dir, "child_"+str(i))

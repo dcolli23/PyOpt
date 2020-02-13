@@ -190,14 +190,30 @@ def test_record_extreme_p_values():
 
   pmm.record_extreme_p_values()
 
-  warnings_text_truth = (
-"""WARNING: P value for parameter "5@1" > 0.95; iteration 1!
-	value = 0.99
-WARNING: P value for parameter "3@1" < 0.05; iteration 1!
-	value = 0.01
-""")
+  warnings_text_truth = ("WARNING: P value for parameter \"5@1\" > 0.95; iteration 1!\n"
+    "\tvalue = 0.99\n"
+    "WARNING: P value for parameter \"3@1\" < 0.05; iteration 1!\n"
+    "\tvalue = 0.01\n")
   with open(os.path.join(pmm.output_dir, "WARNINGS.log"), 'r') as f:
     warnings_text_test = f.read()
 
   assert (warnings_text_test == warnings_text_truth), ("ParameterManipulatorMixin did not record "
     "p value/parameter value warnings correctly!")
+
+def test_setup_parameters():
+  pmm = ParameterManipulatorMixin()
+  pmm.options_file = PARAM_DICT["options_file"]
+  pmm.original_model_file = PARAM_DICT["original_model_file"]
+  pmm.optimization_template_file = PARAM_DICT["optimization_template_file"]
+  pmm.setup_parameters()
+
+  p_val_truth = np.asarray([0.85, 0.15])
+  p_value_history_truth = [[0.85], [0.15]]
+  for i in range(len(p_val_truth)):
+    assert (pmm.p_values[i] == p_val_truth[i]), ("ParameterManipulatorMixin did not set up p "
+      "values correctly!")
+
+    assert (pmm.p_value_history[i][0] == p_value_history_truth[i][0]), ("ParameterManipulatorMixin "
+      "did not set up p value history correctly!")
+  
+

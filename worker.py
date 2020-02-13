@@ -72,32 +72,14 @@ class Worker(ParameterManipulatorMixin, SimulationRunner):
     print ("WARNING: Assuming fit variable of only 'muslce_force' now.")
 
     # Initialize variable for keeping track of iterations.
-    self.iteration_number = 0
-
-    # Initialize the empty parameter interpolation lists.
-    self.p_objs = []
+    self.iteration_number = 0    
 
     # Initialize variables for holding error.
     self.best_error = np.inf
     self.error_values = []
 
-    # Initialize the dictionary structures for JSON parsing.
-    self.options_dict = {}
-    self.optimization_template_dict = {}
-    self.model_dict = {}
-
-    # Read in the options file to set the number of repeats.
-    self.read_options_file()
-
-    # Read in the original JSON model file.
-    self.read_original_model_file()
-
-    # Read in the optimization structure.
-    self.read_optimization_structure()
-
-    # Form the initial p_value array and p-value history.
-    self.p_values = np.asarray([obj.p_value for obj in self.p_objs])
-    self.p_value_history = [[obj.p_value] for obj in self.p_objs]
+    # Set up all of the class attributes for manipulating parameters.
+    self.setup_parameters()
 
     # Make the plots for optimization bookkeeping.
     if self.display_progress: self.initialize_optimization_figure()
