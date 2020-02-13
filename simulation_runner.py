@@ -42,6 +42,10 @@ class SimulationRunner(SimulationBase):
     self.compute_rolling_average = compute_rolling_average
     self.fit_data = None
 
+    self.iteration_number = 0
+    self.best_error = np.inf
+    self.error_values = []
+
     # Read in the simulation times from the protocol file. We'll be using these for interpolating
     # the target data.
     self.sim_times = protocol.get_sim_time(self.protocol_file)

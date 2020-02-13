@@ -42,7 +42,11 @@ SIM_RUNNER_DICT = {
 def test_simulation_runner_initialization():
   sr = SimulationRunner(**SIM_RUNNER_DICT)
 
-  assert (sr), "SimulationRunner did not initialize correctly!"
+  msg = "SimulationRunner did not initialize correctly!"
+  assert (sr), msg
+  assert (sr.iteration_number == 0), msg
+  assert (sr.best_error == np.inf), msg
+  assert (sr.error_values == []), msg
 
 def test_get_simulation_times():
   sr = SimulationRunner(**SIM_RUNNER_DICT)

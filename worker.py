@@ -71,13 +71,6 @@ class Worker(ParameterManipulatorMixin, SimulationRunner):
     print ("WARNING: Assuming a fit mode of only time")
     print ("WARNING: Assuming fit variable of only 'muslce_force' now.")
 
-    # Initialize variable for keeping track of iterations.
-    self.iteration_number = 0    
-
-    # Initialize variables for holding error.
-    self.best_error = np.inf
-    self.error_values = []
-
     # Set up all of the class attributes for manipulating parameters.
     self.setup_parameters()
 
