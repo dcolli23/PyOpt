@@ -90,7 +90,7 @@ class WorkerFamily(SimplexPlotterMixin, ParameterManipulatorMixin):
     self.setup_parameters()
     self.read_target_data()
 
-    self.fit_data = self.target_data.copy()
+    self.fit_data = self.target_data[:, 1].copy()
 
     child_dict = {
       "fibersim_file":self.fibersim_file,
@@ -154,17 +154,25 @@ class WorkerFamily(SimplexPlotterMixin, ParameterManipulatorMixin):
       print ("Running child #{}/{}".format(i + 1, len(self.children)))
       child.run_simulation()
       child.read_simulation_results()
-      self.fit_data[i, 1] = child.fit_data
+      self.fit_data[i] = child.fit_data
       error += child.get_simulation_error()
 
     if error < self.best_error:
       self.best_error = error
       self.write_best_model_file()
 
-    self.error_values.append(error)
+    self.most_recent_error = error
 
     return error
 
   def update_family(self, p_value_array):
     """Callback that updates the WorkerFamily after each iteration of the optimizer"""
-    self.update_plots()
+    self.iteration_number += 1
+    self.error_values.append(self.most_recent_error)
+
+    for i in range(self.p_values.shape[0]):
+      self.p_value_history[i].append(self.p_values[i])
+    
+    self.dump_param_information()
+
+    if self.display_progress: self.update_plots()
