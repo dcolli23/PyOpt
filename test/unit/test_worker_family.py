@@ -63,6 +63,7 @@ def test_worker_family_fit_function():
   for child in wf.children:
     child.run_simulation = lambda: None
     child.get_simulation_error = lambda: 1
+    child.read_simulation_results = lambda: None
   
   dummy_p_values = np.asarray([1])
 
