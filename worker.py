@@ -113,7 +113,6 @@ class Worker(ParameterManipulatorMixin, SimulationRunner):
 
     if this_error < self.best_error:
       self.best_error = this_error
-
       self.write_best_model_file()
       
       # Call the callback for minimum error.
