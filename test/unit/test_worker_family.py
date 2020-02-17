@@ -113,3 +113,31 @@ def test_worker_family_initializes_with_correct_target_data():
   for i, child in enumerate(wf.children):
     assert (child.target_data == i), ("WorkerFamily did not initialize children with correct "
       "target data!")
+
+def test_fig_initialization():
+  """Tests the initialization of the optimization figure"""
+  # Monkey-patch the Worker's figure and plot initialization to make sure they're called.
+  def initialize_figure(self):
+    self.figure_method_called = True
+  def make_plots(self):
+    self.plot_method_called = True
+    
+  old_initialize_figure = WorkerFamily.initialize_figure
+  WorkerFamily.initialize_figure = initialize_figure
+  old_make_plots = WorkerFamily.make_plots
+  WorkerFamily.make_plots = make_plots
+  WorkerFamily.figure_method_called = False
+  WorkerFamily.plot_method_called = False
+
+  this_wf_dict = copy.copy(WF_DICT)
+  this_wf_dict["display_progress"] = True
+  wf = WorkerFamily(**this_wf_dict)
+
+  assert (wf.figure_method_called), "WorkerFamily figure method was not called!"
+  assert (wf.plot_method_called), "WorkerFamily make plot method was not called!"
+
+  # Do some cleanup to fix the monkeypatching.
+  WorkerFamily.initialize_figure = old_initialize_figure
+  WorkerFamily.make_plots = old_make_plots
+  del WorkerFamily.figure_method_called
+  del WorkerFamily.plot_method_called

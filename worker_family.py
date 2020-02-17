@@ -15,14 +15,15 @@ import numpy as np
 from .worker import Worker
 from .simulation_runner import SimulationRunner
 from .parameter_manipulator_mixin import ParameterManipulatorMixin
+from .simplex_plotter_mixin import SimplexPlotterMixin
 
 
-class WorkerFamily(ParameterManipulatorMixin):
+class WorkerFamily(SimplexPlotterMixin, ParameterManipulatorMixin):
   """Class for fitting a family of simulations"""
   def __init__(self, fibersim_file, options_file, original_model_file, working_model_file, 
     best_model_file, protocol_files, fit_mode, fit_variable, optimization_template_file, output_dir,
     target_data, time_steps_to_steady_state=2500, compute_rolling_average=False, 
-    display_progress=False):
+    display_progress=False, optimization_figure=None):
     """Initializes a WorkerFamily object
     
     Parameters
@@ -61,6 +62,9 @@ class WorkerFamily(ParameterManipulatorMixin):
     display_progress : bool, optional
         Whether to display the progress of the optimization job via a matplotlib figure, by default
         False.
+    optimization_figure : matplotlib.figure, optional
+        The figure that will be updated, by default None and will be initialized with 
+        `initialize_figure()`
     """
     self.fibersim_file = fibersim_file
     self.options_file = options_file
@@ -76,6 +80,7 @@ class WorkerFamily(ParameterManipulatorMixin):
     self.time_steps_to_steady_state = time_steps_to_steady_state
     self.compute_rolling_average = compute_rolling_average
     self.display_progress = display_progress
+    self.fig = optimization_figure
     
     self.children = []
     self.error_values = []
@@ -113,6 +118,8 @@ class WorkerFamily(ParameterManipulatorMixin):
       # Initialize the child.
       child_obj = SimulationRunner(**child_dict)
       self.children.append(child_obj)
+    
+    if self.display_progress: self.initialize_optimization_figure()
       
   def read_target_data(self):
     """Sets up the target data for passing to children"""

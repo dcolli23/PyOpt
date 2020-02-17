@@ -28,22 +28,6 @@ PLOTTER_DICT = {
   "fig":None
 }
 
-# def test_figure_initialization():
-#   # Redefine some of the methods called in the SimulationPlotter class.
-#   old_figure_func = plt.figure
-#   plt.figure = lambda figsize: None#figsize
-#   old_ion_func = plt.ion
-#   plt.ion = lambda: True
-
-#   sp = SimplexPlotterMixin()
-#   sp.fig = PLOTTER_DICT["fig"]
-#   sp.initialize_figure()
-
-#   assert (sp.fig == [9,5]), "SimplexPlotter did not initialize figure correctly!"
-
-#   plt.figure = old_figure_func
-#   plt.ion = old_ion_func
-
 def test_fig_initialization():
   """Tests the initialization of the SimplexPlotterMixin figure initialization"""
   # Monkey-patch the Worker's figure and plot initialization to make sure they're called.
