@@ -28,6 +28,8 @@ PROTOCOL_FILES = [
   os.path.join(TEST_DATA_ROOT, "optimization_protocol.txt"),
   os.path.join(TEST_DATA_ROOT, "optimization_protocol.txt")
 ]
+TARGET_DATA = np.zeros((len(PROTOCOL_FILES), 2))
+TARGET_DATA[:, 1] = np.arange(TARGET_DATA.shape[0])
 WF_DICT = {
   "fibersim_file": None,
   "options_file":os.path.join(TEST_DATA_ROOT, "sim_options.json"),
@@ -37,7 +39,7 @@ WF_DICT = {
   "protocol_files":PROTOCOL_FILES,
   "fit_mode":"end_point",
   "fit_variable":"muscle_force",
-  "target_data":np.arange(len(PROTOCOL_FILES)),
+  "target_data":TARGET_DATA,
   "optimization_template_file":os.path.join(TEST_DATA_ROOT, "optimization_template.json"),
   "output_dir":TEST_RESULT_DIR,
   "time_steps_to_steady_state":1,
@@ -68,7 +70,7 @@ def test_worker_family_fit_function():
 def test_worker_family_read_target_data_string():
   this_wf_dict = copy.copy(WF_DICT)
   this_wf_dict["target_data"] = os.path.join(WF_DICT["output_dir"], "wf_test_target_data.txt")
-  data = np.arange(len(WF_DICT["protocol_files"]))
+  data = np.ones((len(WF_DICT["protocol_files"]), 2))
   np.savetxt(this_wf_dict["target_data"], data)
 
   wf = WorkerFamily(**this_wf_dict)
@@ -77,7 +79,7 @@ def test_worker_family_read_target_data_string():
 
 def test_worker_family_read_target_data_array():
   this_wf_dict = copy.copy(WF_DICT)
-  data = np.arange(len(WF_DICT["protocol_files"]))
+  data = np.ones((len(WF_DICT["protocol_files"]), 2))
   this_wf_dict["target_data"] = data
 
   wf = WorkerFamily(**this_wf_dict)
@@ -93,8 +95,21 @@ def test_worker_family_read_target_data_raises_type_error():
   
 def test_worker_family_read_target_data_verifies_data_length_num_children_match():
   this_wf_dict = copy.copy(WF_DICT)
-  this_wf_dict["target_data"] = np.arange(len(this_wf_dict["protocol_files"]) + 1)
+  this_wf_dict["target_data"] = np.ones((len(this_wf_dict["protocol_files"]) + 1, 2))
 
   with pytest.raises(ValueError):
     wf = WorkerFamily(**this_wf_dict)
 
+def test_worker_family_read_target_data_verifies_data_length_num_children_match_1():
+  this_wf_dict = copy.copy(WF_DICT)
+  this_wf_dict["target_data"] = np.ones((len(this_wf_dict["protocol_files"]), 3))
+
+  with pytest.raises(ValueError):
+    wf = WorkerFamily(**this_wf_dict)
+
+def test_worker_family_initializes_with_correct_target_data():
+  wf = WorkerFamily(**WF_DICT)
+
+  for i, child in enumerate(wf.children):
+    assert (child.target_data == i), ("WorkerFamily did not initialize children with correct "
+      "target data!")

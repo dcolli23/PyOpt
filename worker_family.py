@@ -108,7 +108,7 @@ class WorkerFamily(ParameterManipulatorMixin):
       os.makedirs(child_dict["output_dir"])
 
       # Give each child their respective singular point to fit in the target data.
-      child_dict["target_data"] = self.target_data[i]
+      child_dict["target_data"] = self.target_data[i, 1]
 
       # Initialize the child.
       child_obj = SimulationRunner(**child_dict)
@@ -123,8 +123,9 @@ class WorkerFamily(ParameterManipulatorMixin):
       raise TypeError("target_data must be either a string describing a path to the target data "
         "TXT  file or a numpy.ndarray!")
     
-    if self.target_data.size != len(self.protocol_files):
-      raise ValueError("Target data must have the same length as the number of protocol files!")
+    if self.target_data.shape[0] != len(self.protocol_files) or self.target_data.shape[1] != 2:
+      print (self.target_data.shape)
+      raise ValueError("Target data must have shape == [len(protocol_files), 2]!")
     
   def fit(self, p_value_array):
     """Calls the fit function for each child of this family and returns collective error"""
