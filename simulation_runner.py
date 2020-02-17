@@ -114,22 +114,28 @@ class SimulationRunner(SimulationBase):
       rolling_window_size = 5
       kernel = np.ones(rolling_window_size) / rolling_window_size
       self.fit_data = np.convolve(self.fit_data, kernel, 'valid')
+    
+    if self.fit_mode == "end_point":
+      # Average the last 10 time points
+      no_of_time_steps_to_avg = 10
+      no_of_time_steps_to_avg = min([self.fit_data.shape[0], no_of_time_steps_to_avg])
+      self.fit_data = np.mean(self.fit_data[-no_of_time_steps_to_avg:])
 
   def get_simulation_error(self):
     """Returns the error for this simulation based on the objective function."""
     if self.fit_mode == "time":
       error = np.sum((self.fit_data[self.time_steps_to_steady_state:] - self.target_data[:,1])**2)
+      
+      # Normalize the error so it does not depend on the number of time steps used.
+      error /= self.target_data.shape[0]
     elif self.fit_mode == "end_point":
       # Average the last 10 time points
-      no_of_time_steps_to_avg = 10
-      no_of_time_steps_to_avg = min([self.fit_data.shape[0], no_of_time_steps_to_avg])
-      simulation_end_point = np.mean(self.fit_data[-no_of_time_steps_to_avg:])
-      error = np.sum((self.target_data - simulation_end_point)**2)
+      # no_of_time_steps_to_avg = 10
+      # no_of_time_steps_to_avg = min([self.fit_data.shape[0], no_of_time_steps_to_avg])
+      # simulation_end_point = np.mean(self.fit_data[-no_of_time_steps_to_avg:])
+      error = np.sum((self.target_data - self.fit_data)**2)
     else:
       raise RuntimeError("Fit mode \"{}\" not supported!".format(self.fit_mode))
-
-    # Normalize the error so it does not depend on the number of time steps used.
-    error /= self.target_data.shape[0]
 
     # Normalize the error to the range of the y data.
     error /= np.max(self.target_data)
