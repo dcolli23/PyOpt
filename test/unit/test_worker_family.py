@@ -73,7 +73,7 @@ def test_worker_family_read_target_data_string():
 
   wf = WorkerFamily(**this_wf_dict)
 
-  assert (wf.target_data == data), "WorkerFamily did not read target_data correctly!"
+  assert (np.array_equal(wf.target_data, data)), "WorkerFamily did not read target_data correctly!"
 
 def test_worker_family_read_target_data_array():
   this_wf_dict = copy.copy(WF_DICT)
@@ -82,7 +82,7 @@ def test_worker_family_read_target_data_array():
 
   wf = WorkerFamily(**this_wf_dict)
 
-  assert (wf.target_data == data), "WorkerFamily did not read target_data correctly!"
+  assert (np.array_equal(wf.target_data, data)), "WorkerFamily did not read target_data correctly!"
   
 def test_worker_family_read_target_data_raises_type_error():
   this_wf_dict = copy.copy(WF_DICT)

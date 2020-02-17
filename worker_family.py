@@ -10,6 +10,8 @@ Purpose: WorkerFamily class for fitting a family of simulations. Can be called b
 import os
 import shutil
 
+import numpy as np
+
 from .worker import Worker
 from .simulation_runner import SimulationRunner
 from .parameter_manipulator_mixin import ParameterManipulatorMixin
@@ -46,7 +48,11 @@ class WorkerFamily(ParameterManipulatorMixin):
     output_dir : str
         Path to the output directory for this optimization job.
     target_data : str or numpy.ndarray
-        Either the path to the target data for this simulation or the target data in a numpy.ndarray.
+        Either the path to the target data for this simulation or the target data in a 
+        numpy.ndarray.
+        NOTE: With the WorkerFamily, this should be an array of just the points that each child is
+        attempting to fit to. For example, if you are wishing to fit 10 points for this family of
+        simulations, you must supply data that is SOLELY those points.
     time_steps_to_steady_state : int, optional
         The number of time steps it takes the model to reach steady state. This is ignored when
         `fit_mode` == "end_point".
@@ -70,16 +76,21 @@ class WorkerFamily(ParameterManipulatorMixin):
     self.time_steps_to_steady_state = time_steps_to_steady_state
     self.compute_rolling_average = compute_rolling_average
     self.display_progress = display_progress
+    
     self.children = []
     self.error_values = []
+    self.iteration_number = 0
+    self.best_error = np.inf
+
+    self.setup_parameters()
+    self.read_target_data()
 
     child_dict = {
       "fibersim_file":self.fibersim_file,
       "options_file":self.options_file,
-      "model_file":self.original_model_file,
+      "model_file":self.working_model_file,
       "fit_mode":self.fit_mode,
       "fit_variable":self.fit_variable,
-      "target_data":self.target_data,
       "time_steps_to_steady_state":self.time_steps_to_steady_state,
       "compute_rolling_average":self.compute_rolling_average,
     }
@@ -96,21 +107,46 @@ class WorkerFamily(ParameterManipulatorMixin):
         shutil.rmtree(child_base_dir)
       os.makedirs(child_dict["output_dir"])
 
+      # Give each child their respective singular point to fit in the target data.
+      child_dict["target_data"] = self.target_data[i]
+
       # Initialize the child.
       child_obj = SimulationRunner(**child_dict)
       self.children.append(child_obj)
-
+      
+  def read_target_data(self):
+    """Sets up the target data for passing to children"""
+    # We have to read in the data if it's not already an array.
+    if isinstance(self.target_data, str):
+      self.target_data = np.loadtxt(self.target_data)
+    elif not isinstance(self.target_data, np.ndarray):
+      raise TypeError("target_data must be either a string describing a path to the target data "
+        "TXT  file or a numpy.ndarray!")
+    
+    if self.target_data.size != len(self.protocol_files):
+      raise ValueError("Target data must have the same length as the number of protocol files!")
+    
   def fit(self, p_value_array):
     """Calls the fit function for each child of this family and returns collective error"""
+    # Update the parameters and dump the new model file.
+    self.p_values = p_value_array
+    self.update_parameters()
+    self.write_working_model_file()
+
+    # Dump the information we're wanting to log.
+    self.dump_param_information()
+    self.record_extreme_p_values()
+
     # Create error storage for our family of simulations.
     error = 0
 
     for i, child in enumerate(self.children):
       print ("Running child #{}/{}".format(i + 1, len(self.children)))
       error += child.fit_worker(p_value_array)
-      # child.dump_param_information()
 
-    # if error < min(self.error_values):
+    if error < self.best_error:
+      self.best_error = error
+      self.write_best_model_file()
 
     self.error_values.append(error)
 
