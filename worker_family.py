@@ -150,7 +150,8 @@ class WorkerFamily(SimplexPlotterMixin, ParameterManipulatorMixin):
 
     for i, child in enumerate(self.children):
       print ("Running child #{}/{}".format(i + 1, len(self.children)))
-      error += child.fit_worker(p_value_array)
+      child.run_simulation()
+      error += child.get_simulation_error()
 
     if error < self.best_error:
       self.best_error = error
@@ -159,3 +160,7 @@ class WorkerFamily(SimplexPlotterMixin, ParameterManipulatorMixin):
     self.error_values.append(error)
 
     return error
+
+  def update_family(self):
+    """Callback that updates the WorkerFamily after each iteration of the optimizer"""
+    self.update_plots()
