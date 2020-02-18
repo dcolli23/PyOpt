@@ -10,7 +10,9 @@ Purpose: Class for plotting simplex optimization progress.
 import matplotlib.pyplot as plt
 import numpy as np
 
-class SimplexPlotterMixin:
+from .plot_saver_mixin import PlotSaverMixin
+
+class SimplexPlotterMixin(PlotSaverMixin):
   """Mixin for plotting progress of simplex optimization"""
   def initialize_optimization_figure(self):
     """Initializes the figure and starts plots for optimization plotting"""
@@ -94,3 +96,6 @@ class SimplexPlotterMixin:
     # draw the new data on the plot
     self.fig.canvas.draw()
     self.fig.canvas.flush_events()
+
+    # Save the figure.
+    self.save_plot_snapshot()

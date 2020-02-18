@@ -19,8 +19,9 @@ import cv2
 from ._simulation_base import SimulationBase
 from .worker import Worker
 from . import display_util as du
+from .plot_saver_mixin import PlotSaverMixin
 
-class MasterWorker(SimulationBase):
+class MasterWorker(PlotSaverMixin, SimulationBase):
   """Class for particle swarm optimization."""
   def __init__(self,
                fit_mode,
@@ -323,13 +324,6 @@ class MasterWorker(SimulationBase):
     # draw the data on the plot
     self.fig.canvas.draw()
     self.fig.canvas.flush_events()
-
-  def save_plot_snapshot(self):
-    """Saves a snapshot of the plots and saves to the animation output directory"""
-    snapshot = du.get_img_from_fig(self.fig, dpi=180)
-    output_image_path = os.path.join(self.animation_output_dir, self.plot_animation_file_root
-      +str(len(self.error_values))+".png")
-    cv2.imwrite(output_image_path, snapshot)
 
   def __update_plots(self):
     """Updates plots for visualizing the PSO"""
