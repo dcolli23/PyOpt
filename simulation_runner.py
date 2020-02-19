@@ -130,12 +130,12 @@ class SimulationRunner(SimulationBase):
       
       # Normalize the error so it does not depend on the number of time steps used.
       error /= self.target_data.shape[0]
+
+      # Normalize the error to the range of the y data.
+      error /= np.max(self.target_data)
     elif self.fit_mode == "end_point":
       error = np.sum((self.target_data - self.fit_data)**2)
     else:
       raise RuntimeError("Fit mode \"{}\" not supported!".format(self.fit_mode))
-
-    # Normalize the error to the range of the y data.
-    error /= np.max(self.target_data)
     
     return error
