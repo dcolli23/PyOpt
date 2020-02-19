@@ -161,14 +161,13 @@ class WorkerFamily(SimplexPlotterMixin, ParameterManipulatorMixin):
       self.best_error = error
       self.write_best_model_file()
 
-    self.most_recent_error = error
-
     return error
 
   def update_family(self, p_value_array):
     """Callback that updates the WorkerFamily after each iteration of the optimizer"""
+    self.p_values = p_value_array
     self.iteration_number += 1
-    self.error_values.append(self.most_recent_error)
+    self.error_values.append(self.best_error)
 
     for i in range(self.p_values.shape[0]):
       self.p_value_history[i].append(self.p_values[i])
