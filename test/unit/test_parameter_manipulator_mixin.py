@@ -45,20 +45,6 @@ PARAM_DICT = {
   "display_progress":False
 }
 
-def test_mixin_read_options_file():
-  # Read in the options file.
-  with open(PARAM_DICT["options_file"], 'r') as f:
-    options_truth = json.load(f)
-  
-  # Initialize the mixin.
-  pmm = ParameterManipulatorMixin()
-  pmm.options_file = PARAM_DICT["options_file"]
-  pmm.read_options_file()
-
-  # This is a shallow equivalence check but it will do for now since the options dictionary is flat.
-  assert (pmm.options_dict == options_truth), ("ParameterManipulatorMixin did not read options "
-    "file correctly!")
-
 def test_set_regular_param():
   test = {"a":1, "b":2}
   pmm = ParameterManipulatorMixin()
@@ -97,6 +83,22 @@ def test_write_working_model_file():
     test = json.load(f)
 
   assert (test == truth), "ParameterManipulatorMixin did not write working model file correctly!"
+
+def test_write_best_model_file():
+  pmm = ParameterManipulatorMixin()
+  pmm.original_model_file = PARAM_DICT["original_model_file"]
+  pmm.best_model_file = PARAM_DICT["best_model_file"]
+  pmm.read_original_model_file()
+  pmm.write_best_model_file()
+
+  with open(pmm.original_model_file, 'r') as f:
+    model_truth = json.load(f)
+  with open(pmm.best_model_file, 'r') as f:
+    model_test = json.load(f)
+
+  # shallow equivalence test.
+  assert (model_test == model_truth), ("ParameterManipulatorMixin did not write best model "
+    "correctly!")
 
 def test_read_original_model_file():
   with open(PARAM_DICT["original_model_file"], 'r') as f:

@@ -10,17 +10,20 @@ Purpose: WorkerFamily class for fitting a family of simulations. Can be called b
 import os
 import shutil
 
+import numpy as np
+
 from .worker import Worker
 from .simulation_runner import SimulationRunner
 from .parameter_manipulator_mixin import ParameterManipulatorMixin
+from .simplex_plotter_mixin import SimplexPlotterMixin
 
 
-class WorkerFamily(ParameterManipulatorMixin):
+class WorkerFamily(SimplexPlotterMixin, ParameterManipulatorMixin):
   """Class for fitting a family of simulations"""
   def __init__(self, fibersim_file, options_file, original_model_file, working_model_file, 
     best_model_file, protocol_files, fit_mode, fit_variable, optimization_template_file, output_dir,
     target_data, time_steps_to_steady_state=2500, compute_rolling_average=False, 
-    display_progress=False):
+    display_progress=False, optimization_figure=None):
     """Initializes a WorkerFamily object
     
     Parameters
@@ -46,7 +49,11 @@ class WorkerFamily(ParameterManipulatorMixin):
     output_dir : str
         Path to the output directory for this optimization job.
     target_data : str or numpy.ndarray
-        Either the path to the target data for this simulation or the target data in a numpy.ndarray.
+        Either the path to the target data for this simulation or the target data in a 
+        numpy.ndarray.
+        NOTE: With the WorkerFamily, this should be an array of just the points that each child is
+        attempting to fit to. For example, if you are wishing to fit 10 points for this family of
+        simulations, you must supply data that is SOLELY those points.
     time_steps_to_steady_state : int, optional
         The number of time steps it takes the model to reach steady state. This is ignored when
         `fit_mode` == "end_point".
@@ -55,6 +62,9 @@ class WorkerFamily(ParameterManipulatorMixin):
     display_progress : bool, optional
         Whether to display the progress of the optimization job via a matplotlib figure, by default
         False.
+    optimization_figure : matplotlib.figure, optional
+        The figure that will be updated, by default None and will be initialized with 
+        `initialize_figure()`
     """
     self.fibersim_file = fibersim_file
     self.options_file = options_file
@@ -70,16 +80,24 @@ class WorkerFamily(ParameterManipulatorMixin):
     self.time_steps_to_steady_state = time_steps_to_steady_state
     self.compute_rolling_average = compute_rolling_average
     self.display_progress = display_progress
+    self.fig = optimization_figure
+    
     self.children = []
     self.error_values = []
+    self.iteration_number = 0
+    self.best_error = np.inf
+
+    self.setup_parameters()
+    self.read_target_data()
+
+    self.fit_data = self.target_data[:, 1].copy().astype(np.float)
 
     child_dict = {
       "fibersim_file":self.fibersim_file,
       "options_file":self.options_file,
-      "model_file":self.original_model_file,
+      "model_file":self.working_model_file,
       "fit_mode":self.fit_mode,
       "fit_variable":self.fit_variable,
-      "target_data":self.target_data,
       "time_steps_to_steady_state":self.time_steps_to_steady_state,
       "compute_rolling_average":self.compute_rolling_average,
     }
@@ -96,22 +114,64 @@ class WorkerFamily(ParameterManipulatorMixin):
         shutil.rmtree(child_base_dir)
       os.makedirs(child_dict["output_dir"])
 
+      # Give each child their respective singular point to fit in the target data.
+      child_dict["target_data"] = self.target_data[i, 1]
+
       # Initialize the child.
       child_obj = SimulationRunner(**child_dict)
       self.children.append(child_obj)
-
+    
+    if self.display_progress: self.initialize_optimization_figure()
+      
+  def read_target_data(self):
+    """Sets up the target data for passing to children"""
+    # We have to read in the data if it's not already an array.
+    if isinstance(self.target_data, str):
+      self.target_data = np.loadtxt(self.target_data)
+    elif not isinstance(self.target_data, np.ndarray):
+      raise TypeError("target_data must be either a string describing a path to the target data "
+        "TXT  file or a numpy.ndarray!")
+    
+    if self.target_data.shape[0] != len(self.protocol_files) or self.target_data.shape[1] != 2:
+      print (self.target_data.shape)
+      raise ValueError("Target data must have shape == [len(protocol_files), 2]!")
+    
   def fit(self, p_value_array):
     """Calls the fit function for each child of this family and returns collective error"""
+    # Update the parameters and dump the new model file.
+    self.p_values = p_value_array
+    self.update_parameters()
+    self.write_working_model_file()
+
+    # Dump the information we're wanting to log.
+    self.dump_param_information()
+    self.record_extreme_p_values()
+
     # Create error storage for our family of simulations.
     error = 0
 
     for i, child in enumerate(self.children):
       print ("Running child #{}/{}".format(i + 1, len(self.children)))
-      error += child.fit_worker(p_value_array)
-      # child.dump_param_information()
+      child.run_simulation()
+      child.read_simulation_results()
+      self.fit_data[i] = child.fit_data
+      error += child.get_simulation_error()
 
-    # if error < min(self.error_values):
-
-    self.error_values.append(error)
+    if error < self.best_error:
+      self.best_error = error
+      self.write_best_model_file()
 
     return error
+
+  def update_family(self, p_value_array):
+    """Callback that updates the WorkerFamily after each iteration of the optimizer"""
+    self.p_values = p_value_array
+    self.iteration_number += 1
+    self.error_values.append(self.best_error)
+
+    for i in range(self.p_values.shape[0]):
+      self.p_value_history[i].append(self.p_values[i])
+    
+    self.dump_param_information()
+
+    if self.display_progress: self.update_plots()

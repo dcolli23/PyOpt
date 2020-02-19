@@ -141,9 +141,10 @@ def test_get_simulation_error_end_point():
   target_truth = np.mean(fit_data[-10:])
   this_sr_dict = copy.copy(SIM_RUNNER_DICT)
   this_sr_dict["fit_mode"] = "end_point"
+  this_sr_dict["output_dir"] = TEST_DATA_ROOT
+  this_sr_dict["target_data"] = target_truth
   sr = SimulationRunner(**this_sr_dict)
-  sr.target_data = np.asarray([target_truth])
-  sr.fit_data = fit_data
+  sr.read_simulation_results()
 
   assert (np.isclose(sr.get_simulation_error(), 0)), ("SimulationRunner not calculating error "
     "correctly!")

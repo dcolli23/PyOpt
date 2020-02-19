@@ -23,6 +23,7 @@ This software is meant to be used as a Python package. To begin working with PyO
 ### Installation
 
 PyOpt has the following dependencies:
++ `Python 3.7.x`
 + `NumPy`, version = 1.16.4
 + `Matplotlib`, version = 3.1.1
 + `Py-OpenCV`, version = 3.4.2
