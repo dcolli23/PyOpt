@@ -8,7 +8,9 @@ import numpy as np
 from ._simulation_base import SimulationBase
 
 print ("WARNING: Currently relying on FiberSim repository outside of this repository. Refactor!!")
-sys.path.append("../../Models/FiberSim/Python_files/")
+ROOT = os.path.realpath(os.path.dirname(__file__))
+FIBERSIM_MODULES_ROOT = os.path.join(ROOT, "..", "..", "Models", "FiberSim", "Python_files")
+sys.path.append(FIBERSIM_MODULES_ROOT)
 from util import run, instruct, protocol
 
 class SimulationRunner(SimulationBase):
@@ -129,10 +131,6 @@ class SimulationRunner(SimulationBase):
       # Normalize the error so it does not depend on the number of time steps used.
       error /= self.target_data.shape[0]
     elif self.fit_mode == "end_point":
-      # Average the last 10 time points
-      # no_of_time_steps_to_avg = 10
-      # no_of_time_steps_to_avg = min([self.fit_data.shape[0], no_of_time_steps_to_avg])
-      # simulation_end_point = np.mean(self.fit_data[-no_of_time_steps_to_avg:])
       error = np.sum((self.target_data - self.fit_data)**2)
     else:
       raise RuntimeError("Fit mode \"{}\" not supported!".format(self.fit_mode))

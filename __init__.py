@@ -9,3 +9,4 @@ Purpose: Library for optimization and parameter classes.
 from . import master_worker
 from . import params
 from . import worker
+from .worker_family import WorkerFamily
