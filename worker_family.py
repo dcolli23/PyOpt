@@ -90,7 +90,7 @@ class WorkerFamily(SimplexPlotterMixin, ParameterManipulatorMixin):
     self.setup_parameters()
     self.read_target_data()
 
-    self.fit_data = self.target_data[:, 1].copy()
+    self.fit_data = self.target_data[:, 1].copy().astype(np.float)
 
     child_dict = {
       "fibersim_file":self.fibersim_file,
