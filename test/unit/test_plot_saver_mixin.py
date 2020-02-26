@@ -16,12 +16,12 @@ TEST_DATA_ROOT = os.path.join(ROOT, "..", "data", "unit")
 TEST_RESULT_DIR = os.path.join(ROOT, "..", "output", "unit")
 
 # Clear out the previous test results.
-for path in os.listdir(TEST_RESULT_DIR):
-  path = os.path.join(TEST_RESULT_DIR, path)
-  if os.path.isdir(path):
-    shutil.rmtree(path)
-  elif os.path.isfile(path):
-    os.remove(path)
+# for path in os.listdir(TEST_RESULT_DIR):
+#   path = os.path.join(TEST_RESULT_DIR, path)
+#   if os.path.isdir(path):
+#     shutil.rmtree(path)
+#   elif os.path.isfile(path):
+#     os.remove(path)
 
 def test_save_plot_snapshot_with_specified_names():
   ps = PlotSaverMixin()

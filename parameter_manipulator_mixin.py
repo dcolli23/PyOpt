@@ -10,6 +10,7 @@ import sys
 import json
 
 import numpy as np
+import jgrapht
 
 sys.path.append("../../Models/FiberSim/Python_files/")
 from util import instruct
@@ -72,38 +73,6 @@ class ParameterManipulatorMixin:
           str_to_write += "\tvalue = {}\n".format(obj.p_value) 
         f.write(str_to_write)
 
-  def set_rate_param(self, rate_key, new_value, traversed_model_dict):
-    """Sets the rate parameter in the given traversed model dictionary
-    
-    Inputs:
-      rate_key -> str. The key for the rate equation number and parameter that you would like to 
-                  change. This is in the '@' notation. For example, if we want to change rate 
-                  equation 2, parameter 5, the rate_key would be "2@5".
-      new_value -> float. The new value you would like to update the rate parameter to.
-      traversed_model_dict -> list. The model dictionary traversed down to the "rate_equations" 
-                              object. For example, if you read in the model dictionary via the 
-                              'json' module, you would call this function using:
-                                model["kinetics"]["rate_equations"]
-    Example use:
-      If we read in the model file we would like to modify via the 'json' module into a dictionary 
-      called "model" and we want to set the first parameter of rate equation #5 to 10.0, we would call
-      this function as follows:
-        set_rate_param("5@1", 10.0, model["kinetics"]["rate_equations"])
-
-    Returns:
-      No return. This function modifies the dictionary. 
-    """
-    rate_eqn_idx, rate_param_idx = [int(i) - 1 for i in rate_key.split('@')]
-    
-    # Skip the pre-parameter information. 
-    rate_param_idx += 4
-
-    parsed_rate_eqn = traversed_model_dict[rate_eqn_idx].split()
-    parsed_rate_eqn[rate_param_idx] = str(new_value)
-
-    # Join and replace the parsed line.
-    traversed_model_dict[rate_eqn_idx] = "  ".join(parsed_rate_eqn)
-
   def set_regular_param(self, param_key, new_value, traversed_model_dict):
     """Sets the parameter in the model dictionary to the new value."""
     traversed_model_dict[param_key] = new_value
@@ -118,9 +87,9 @@ class ParameterManipulatorMixin:
     # Read the optimization structure into the dictionary object.
     with open(self.optimization_template_file, 'r') as f:
       self.optimization_template_dict = json.load(f)
-    
-    # Set the initial p_values by recursively searching the dictionary.
-    self.__recurs_read_param(this_dict=self.optimization_template_dict)
+
+    # Make parameter objects for all parameters in the optimization template.
+    self.__form_p_objects_from_template()
 
   def write_working_model_file(self):
     """Writes the working JSON model file into the class."""
@@ -135,6 +104,9 @@ class ParameterManipulatorMixin:
     """Reads the original JSON model file into the class."""
     with open(self.original_model_file, 'r') as f:
       self.model_dict = json.load(f)
+    
+    # Flatten the dictionary so we can search the parameters.
+    self._flattened_model_dict = jgrapht.flatten_tree(self.model_dict)
 
   def dump_param_information(self):
     """Dumps the parameter information for this iteration of the optimizer."""
@@ -144,7 +116,7 @@ class ParameterManipulatorMixin:
     # If the file hasn't been written yet, open it and write the headers.
     if not os.path.isfile(file_name):
       f = open(file_name, 'w')
-      param_names = [obj.p_lookup[-1] for obj in self.p_objs]
+      param_names = ['|'.join([str(value) for value in obj.p_lookup]) for obj in self.p_objs]
       str_to_write = '\t'.join(param_names) + '\n'
     else:
       # Open the file for appending
@@ -164,7 +136,7 @@ class ParameterManipulatorMixin:
     file_name = os.path.join(self.output_dir, "p_history.txt")
     if not os.path.isfile(file_name):
       f = open(file_name, 'w')
-      param_names = [obj.p_lookup[-1] for obj in self.p_objs]
+      param_names = ['|'.join([str(value) for value in obj.p_lookup]) for obj in self.p_objs]
       str_to_write = '\t'.join(param_names) + '\n'
     else:
       f = open(file_name, 'a')
@@ -182,47 +154,40 @@ class ParameterManipulatorMixin:
     # Tidy up.
     f.close()
 
-  def __recurs_read_param(self, key=None, this_dict=None, param_path=[]):
-    """Recursively traverses the optimization dictionary structure to set p-values."""
-    traverse = False
-    if not key:
-      # We know this is the first function call in the recursive call and we need to traverse
-      # the dictionary.
-      traverse = True
+  def __form_p_objects_from_template(self):
+    """Forms the parameter objects from the optimization template"""
+    param_list = self.optimization_template_dict["FiberSim_optimization"]["optimization_structure"][
+      "parameters"]
+    for param_template in param_list:
+      # Check to see if the parameter is a rate parameter.
+      if (param_template["name"].startswith("c_kinetics") 
+          or param_template["name"].startswith("m_kinetics")):
+        param_path = param_template["name"].split('|')
+        # Convert all of the integer strings to integers.
+        for i, string in enumerate(param_path):
+          try:
+            value = int(string) - 1
+          except:
+            value = string
+          param_path[i] = value
 
-    elif isinstance(this_dict[key], dict):
-      # Add this key as a node to the parameter path.
-      param_path.append(key)
-
-      # We know this is a dictionary, check if it's an optimization dictionary with p-values.
-      if "p_value" not in this_dict[key].keys():
-        traverse = True
-        this_dict = this_dict[key]
-      
-      # Otherwise, we can set the p_value here.
       else:
-        # Check to make sure the optimization template has been specified correctly.
-        p_mode = this_dict[key]["p_mode"]
-        p_min = this_dict[key]["min_value"]
-        p_max = this_dict[key]["max_value"]
-        p_value = this_dict[key]["p_value"]
+        # We're going to have to search the flattened model dictionary for the parameter path.
+        leaf_index = [i for i, leaf in enumerate(self._flattened_model_dict) if 
+          leaf[1][0] == param_template["name"]]
+        assert (len(leaf_index) <= 1), "Parameter, \"{}\", is not specific to one parameter".format(
+          param_template["name"])
+        assert (len(leaf_index) >= 1), "Parameter, \"{}\", was not found!".format(
+          param_template["name"])
+        leaf_index = leaf_index[0]
+        param_path = self._flattened_model_dict[leaf_index][0] + [param_template["name"]]
+  
+      p_obj = ParamObject(param_template["min_value"], param_template["max_value"], 
+        param_template["p_value"], param_template["p_mode"], param_path,
+        # display_name=param_template["name"]
+      )
 
-        assert (p_mode == "lin" or p_mode == "log"), (
-          "p_mode for parameter \"{}\" in optimization template must be \"lin\" or \"log\"!".format(
-            key))
-        assert (isinstance(p_value, (int, float))), (
-          "p_value for parameter \"{}\" in optimization template must be a number!".format(key))
-        assert (isinstance(p_min, (int, float))), (
-          "min_value for parameter \"{}\" in optimization template must be a number!".format(key))
-        assert (isinstance(p_max, (int, float))), (
-          "max_value for parameter \"{}\" in optimization template must be a number!".format(key))
-
-        # Store the values for this parameter.
-        self.p_objs.append( ParamObject(p_min, p_max, p_value, p_mode, param_path) )
-    
-    if traverse:
-      for sub_key in this_dict.keys():
-        self.__recurs_read_param(key=sub_key, this_dict=this_dict, param_path=param_path.copy())
+      self.p_objs.append(p_obj)
 
   def __recurs_update_parameter(self, p_lookup, new_param_val, traversed_model_dict=None):
     """Updates the parameter values for this worker in the model dictionary."""
@@ -240,8 +205,4 @@ class ParameterManipulatorMixin:
       self.__recurs_update_parameter(p_lookup, new_param_val, traversed_model_dict)
     
     else:
-      # Check to see if this is a rate parameter to set.
-      if '@' in new_k:
-        self.set_rate_param(new_k, new_param_val, traversed_model_dict)
-      else:
-        self.set_regular_param(new_k, new_param_val, traversed_model_dict)
+      self.set_regular_param(new_k, new_param_val, traversed_model_dict)

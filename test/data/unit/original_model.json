@@ -1,84 +1,120 @@
 {
-  "base_parameters": {
+  "muscle": {
     "no_of_half_sarcomeres": 1,
     "no_of_myofibrils": 1,
-    "temperature": 288,
-    "myosin": {
-      "m_n": 16,
-      "m_y": [ -2.5, -1.5, -0.5, 0.5, -3.0, -2.0, -1.0, 0.0, -2.5, -1.5, -0.5, 0.5, -3.0, -2.0, -1.0, 0.0 ],
-      "m_z": [ 2.598, 2.598, 2.598, 2.598, 1.732, 1.732, 1.732, 1.732, 0.8660, 0.8660, 0.8660, 0.8660, 0.0, 0.0, 0.0, 0.0 ],
-      "m_force_filament": 4,
-      "m_filament_density": 0.25e15,
-      "m_default_lambda": 80.0,
-      "m_nn_distance": 44.0,
-      "m_node_spacing": 13.5,
-      "m_inter_node_twist": 40.0,
-      "m_default_starting_twist": 40.0,
-      "m_default_cbs_per_f": 324,
-      "m_cbs_per_node": 6,
-      "m_cb_angular_separation": 20.0,
-      "m_cb_radial_projection": 10.0,
-      "m_no_of_isoforms": 1,
-      "m_prop_isoforms": [ 1.0 ],
-      "r_angle": 0.0,
-      "r_projection": 0.0,
-      "t_offset": 23.6095
-    },
-    "actin": {
-      "a_n": 32,
-      "a_y": [ -3.0, -2.0, -1.0, 0.0, -2.5, -1.5, -0.5, 0.5, -2.5, -1.5, -0.5, 0.5, -3.0, -2.0, -1.0, 0.0, -3.0, -2.0, -1.0, 0.0, -2.5, -1.5, -0.5, 0.5, -2.5, -1.5, -0.5, 0.5, -3.0, -2.0, -1.0, 0.0 ],
-      "a_z": [ 2.3094, 2.3094, 2.3094, 2.3094, 2.0207, 2.0207, 2.0207, 2.0207, 1.4434, 1.4434, 1.4434, 1.4434, 1.1547, 1.1547, 1.1547, 1.1547, 0.5774, 0.5774, 0.5774, 0.5774, 0.2887, 0.2887, 0.2887, 0.2887, -0.2887, -0.2887, -0.2887, -0.2887, -0.5774, -0.5774, -0.5774, -0.5774 ],
-      "a_bs_node_spacing": 5.375,
-      "a_default_bs_per_f": 378,
-      "a_bs_per_node": 2,
-      "a_spiral_mode": 1,
-      "a_twist_n_per_strand": 7,
-      "a_all_sites_active": 1,
-      "a_bs_radial_projection": 5.5,
-      "a_on_rate": 0.8,
-      "a_off_rate": 50.017,
-      "a_next_on_rate": 33.614,
-      "a_next_off_rate": 3.12,
-      "tn_log_binding_constant": 6.423
-    },
-    "force_constants": {
-      "k_a": 308.336,
-      "k_m": 22.405,
-      "k_cb_pos": 0.0026,
-      "k_cb_neg": 0.0001,
-      "k_t": 0.00039091,
-      "k_im": 0.0
-    }
+    "initial_hs_length": 1615,
+    "m_filament_density": 0.25e15
   },
-  "conditions": {
-    "lambda_condition": 1,
-    "lambda_value": 1.0,
-    "initial_hs_length": 1150.0
+  "thick_structure": {
+    "m_n": 81,
+    "m_crowns_per_filament": 54,
+    "m_hubs_per_crown": 3,
+    "m_myosins_per_hub": 2,
+    "m_inter_crown_rest_length": 13.5,
+    "m_lambda": 80.0,
+    "m_inter_crown_twist": 40.0,
+    "m_within_hub_twist": 20.0,
+    "m_default_starting_twist": 40.0,
+    "m_cb_angular_separation": 20.0,
+    "m_cb_radial_projection": 10.0
   },
-  "kinetics": {
-    "no_of_states": 5,
-    "no_of_transitions": 12,
-    "no_of_function_parameters": 7,
-    "kinetic_scheme": [
-      "1 D 2 5 0 0 R 1 10 0  0 E -2.0  X 0.0",
-      "2 A 3 1 0 0 R 3 2  0  0 E -8.0  X 0.0",
-      "3 A 4 2 5 0 R 5 4  11 0 E -12.0 X 5.0",
-      "4 A 5 3 0 0 R 7 6  0  0 E -20.0 X 10.0",
-      "5 D 1 4 3 0 R 9 8  12 0 E 0.0   X 0.0"
-    ],
-    "rate_equations": [
-      "1  gaussian  a - 33.958  0.0    0.0   0.0   -1.0   0.0    0.0",
-      "2  energy    d - 1.38    1.757  2.81  0.639  6.763 2.87   0.1",
-      "3  sig2      n - 5.88   20.96 -1.04  0.706  0.0   0.0    0.0",
-      "4  energy    n - 0.0     0.0    0.0   0.0    0.0   0.0    0.0",
-      "5  sig2      n - 0.11    1.49   2.57  1.48   0.0   0.0    0.0",
-      "6  energy    n - 0.0     0.0    0.0   0.0    0.0   0.0    0.0",
-      "7  poly      d - 1.743   0.381  0.273 1.021  0.65  0.049  3.255",
-      "8  energy    a - 0.0     0.0    0.0   0.0    0.0   0.0   -1.0",
-      "9  constant  n - 40.1    0.0    0.0   0.0    0.0   0.0    0.0",
-      "10 energy    n - 0.0     0.0    0.0   0.0    0.0   0.0    0.0",
-      "11 poly      d - 0.3     0.3    0.1   2.26   1.0   0.014  2.578",
-      "12 energy    a - 0.0     0.0    0.0   0.0    0.0   0.0   -1.0"
+  "thin_structure": {
+    "a_strands_per_filament": 2,
+    "a_regulatory_units_per_strand": 27,
+    "a_bs_per_unit": 7,
+    "a_inter_bs_rest_length": 5.375,
+    "a_inter_bs_twist": 25.7143,
+    "a_bs_node_spacing": 5.375,
+    "a_bs_per_node": 2
+  },
+  "titin_structure": {
+    "t_attach_a_node": 50,
+    "t_attach_m_node": 44
+  },
+  "thin_parameters":{
+    "a_no_of_bs_states": 2,
+    "a_k_stiff": 100,
+    "a_k_on": 3e7,
+    "a_k_off": 100,
+    "a_k_coop": 10.0
+  },
+  "thick_parameters":{
+    "m_k_stiff": 100
+  },
+  "titin_parameters":{
+      "t_k_stiff": 1e-15,
+      "t_slack_length": 250
+  },
+  "m_parameters": {
+    "m_k_cb": 0.001
+  },
+  "m_kinetics": {
+    "no_of_states": 2,
+    "max_no_of_transitions": 2,
+    "scheme": [
+      {
+        "number": 1,
+        "type": "D",
+        "extension": 0,
+        "transition": [
+          {
+            "new_state": 2,
+            "rate_type": "gaussian",
+            "rate_parameters": [100, 0, 3]
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "type": "A",
+        "extension": 7.0,
+        "transition": [
+          {
+            "new_state": 1,
+            "rate_type": "poly",
+            "rate_parameters": [100, 5, 4]
+          }
+        ]
+      }
+    ]
+  },
+  "mybpc_structure": {
+    "c_thick_proximal_node": 10,
+    "c_thick_stripes": 10,
+    "c_thick_node_spacing": 3,
+    "c_mols_per_node": 3
+  },
+  "mybpc_parameters": {
+    "c_k_stiff": 0.001
+  },
+  "c_kinetics": {
+    "no_of_states": 2,
+    "max_no_of_transitions": 1,
+    "scheme": [
+      {
+        "number": 1,
+        "type": "D",
+        "extension": 0,
+        "transition": [
+          {
+            "new_state": 2,
+            "rate_type": "gaussian",
+            "rate_parameters": [0, 0, 3]
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "type": "A",
+        "extension": 0.0,
+        "transition": [
+        {
+          "new_state": 1,
+          "rate_type": "poly",
+          "rate_parameters": [1, 1, 4]
+        }
+        ]
+      }
     ]
   }
 }

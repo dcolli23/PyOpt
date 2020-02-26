@@ -8,6 +8,7 @@ import json
 import pytest
 import matplotlib.pyplot as plt
 import numpy as np
+import jgrapht
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
 PYOPT_ROOT = os.path.join(ROOT, "..", "..")
@@ -45,31 +46,22 @@ PARAM_DICT = {
   "display_progress":False
 }
 
+CALCULATED_PARAMETER_VALUES = [
+  4e7,
+  10**(-16.75),
+  5.5,
+  5.5,
+  10**(0.5)
+]
+
+P_VALUE_TRUTH = [0.5, 0.5, 0.5, 0.5, 0.5]
+
 def test_set_regular_param():
   test = {"a":1, "b":2}
   pmm = ParameterManipulatorMixin()
   pmm.set_regular_param("a", 2, test)
 
   assert (test["a"] == 2), "ParameterManipulatorMixin did not set regular param correctly!"
-
-def test_set_rate_param_mixin():
-  test = [
-    "1  gaussian  a - 33.958  0.0    0.0   0.0   -1.0   0.0    0.0",
-    "2  energy    d - 1.38    1.757  2.81  0.639  6.763 2.87   0.1",
-    "3  sig2      n - 5.88   20.96 -1.04  0.706  0.0   0.0    0.0",
-  ]
-
-  pmm = ParameterManipulatorMixin()
-  pmm.set_rate_param("1@3", 300, test)
-  pmm.set_rate_param("2@7", 0, test)
-  pmm.set_rate_param("3@1", 217, test)
-
-  for i, rate_eqn in enumerate(test):
-    test[i] = rate_eqn.split()
-  
-  assert (test[0][6] == '300'), "ParameterManipulatorMixin did not set rate param correctly!"
-  assert (test[1][10] == '0'), "ParameterManipulatorMixin did not set rate param correctly!"
-  assert (test[2][4] == '217'), "ParameterManipulatorMixin did not set rate param correctly!"
 
 def test_write_working_model_file():
   truth = {"a":1}
@@ -112,48 +104,65 @@ def test_read_original_model_file():
   assert (pmm.model_dict == truth), ("ParameterManipulatorMixin did not read original model file "
     "correctly!")
 
+  # Check to make sure the flattened dictionary was read in correctly. The key in this dictionary
+  # is the index with which the value in the dictionary should be located.
+  entries = {
+    0: (["muscle"], ["no_of_half_sarcomeres", 1]),
+    -1: (["c_kinetics", "scheme", 1, "transition", 0, "rate_parameters"], [2, 4])
+  }
+  for index, truth in entries.items():
+    assert (pmm._flattened_model_dict[index] == truth), ("ParameterManipulatorMixin did not flatten "
+      "model dictionary correctly!")
+
 def test_read_optimization_structure():
   pmm = ParameterManipulatorMixin()
   pmm.p_objs = []
   pmm.optimization_template_file = PARAM_DICT["optimization_template_file"]
+  with open(PARAM_DICT["original_model_file"], 'r') as f:
+    mod_dict = json.load(f)
+  pmm._flattened_model_dict = jgrapht.flatten_tree(mod_dict)
   pmm.read_optimization_structure()
+  
+  assert (pmm.p_objs), "ParameterManipulatorMixin did not read any parameters in optimization structure!"
 
-  obj_1_test = pmm.p_objs[0]
-  obj_2_test = pmm.p_objs[1]
+  truth_objects = [
+    ParamObject(2e7, 6e7, 0.5, "lin", ["thin_parameters", "a_k_on"]),
+    ParamObject(-15.5, -18, 0.5, "log", ["titin_parameters", "t_k_stiff"]),
+    ParamObject(1, 10, 0.5, "lin", ["m_kinetics", "scheme", 0, "transition", 0, "rate_parameters", 
+      2]),
+    ParamObject(3.0, 8.0, 0.5, "lin", ["m_kinetics", "scheme", 1, "transition", 0, "extension"]),
+    ParamObject(0, 1, 0.5, "log", ["c_kinetics", "scheme", 1, "transition", 0, "rate_parameters", 
+      0])
+  ] 
 
-  obj_1_truth = ParamObject(600, 700, 0.85, "lin", ["kinetics", "rate_equations", "3@1"])
-  obj_2_truth = ParamObject(50, 150, 0.15, "lin", ["kinetics", "rate_equations", "5@1"])
-
-  obj_test = [obj_1_test, obj_2_test]
-  obj_truth = [obj_1_truth, obj_2_truth]
-  for i, ot in enumerate(obj_test):
-    for key, value in vars(ot).items():
-      test = value
-      truth = vars(obj_truth[i])[key]
-      assert (test == truth), ("ParameterManipulatorMixin did not set ParamObject correctly!")
+  test_objects = pmm.p_objs
+  msg = "ParameterManipulatorMixin did not set ParamObject correctly!"
+  for i, obj_truth in enumerate(truth_objects):
+    assert (test_objects[i].min_value == obj_truth.min_value), msg
+    assert (test_objects[i].max_value == obj_truth.max_value), msg
+    assert (test_objects[i].p_value == obj_truth.p_value), msg
+    for j in range(len(obj_truth.p_lookup)):
+      assert (test_objects[i].p_lookup[j] == obj_truth.p_lookup[j])
+    assert (test_objects[i].calculated_value == obj_truth.calculated_value)
 
 def test_update_parameters():
   pmm = ParameterManipulatorMixin()
-  pmm.p_values = np.asarray([0.5, 0.5])
+  pmm.p_values = np.asarray([0.5, 0.5, 0.5, 0.5, 0.5])
   pmm.p_objs = []
   pmm.original_model_file = PARAM_DICT["original_model_file"]
   pmm.read_original_model_file()
   pmm.optimization_template_file = PARAM_DICT["optimization_template_file"]
   pmm.read_optimization_structure()
 
-  param1_truth = 650
-  param2_truth = 100
-
   pmm.update_parameters()
 
-  assert (pmm.p_objs[0].calculated_value == param1_truth), ("ParameterManipulatorMixin did not "
-    "update parameter correctly!")
-  assert (pmm.p_objs[1].calculated_value == param2_truth), ("ParameterManipulatorMixin did not "
+  for i, truth in enumerate(CALCULATED_PARAMETER_VALUES):
+    assert (pmm.p_objs[i].calculated_value == truth), ("ParameterManipulatorMixin did not "
     "update parameter correctly!")
 
 def test_param_dump():
   pmm = ParameterManipulatorMixin()
-  pmm.p_values = np.asarray([0.5, 0.5])
+  pmm.p_values = np.asarray(P_VALUE_TRUTH)
   pmm.p_objs = []
   pmm.output_dir = PARAM_DICT["output_dir"]
   pmm.original_model_file = PARAM_DICT["original_model_file"]
@@ -163,24 +172,19 @@ def test_param_dump():
   pmm.update_parameters()
   pmm.dump_param_information()
 
-  param1_truth = 650
-  param2_truth = 100
-
   param_dump = np.loadtxt(os.path.join(pmm.output_dir, "parameter_history.txt"), skiprows=1)
   p_dump = np.loadtxt(os.path.join(pmm.output_dir, "p_history.txt"), skiprows=1)
 
-  assert (param_dump[0] == param1_truth), ("ParameterManipulatorMixin did not dump parameter "
-    "correctly!")
-  assert (param_dump[1] == param2_truth), ("ParameterManipulatorMixin did not dump parameter "
-    "correctly!")
-  assert (p_dump[0] == pmm.p_values[0]), ("ParameterManipulatorMixin did not dump p value "
-    "correctly!")
-  assert (p_dump[1] == pmm.p_values[1]), ("ParameterManipulatorMixin did not dump p value "
-    "correctly!")
+  for i in range(len(P_VALUE_TRUTH)):
+    p_truth = pmm.p_values[i]
+    param_value_truth = CALCULATED_PARAMETER_VALUES[i]
+    assert (p_dump[i] == p_truth), ("ParameterManipulatorMixin did not dump p value correctly!")
+    assert(param_dump[i] == param_value_truth), ("ParameterManipulatorMixin did not dump parameter "
+      "correctly!")
 
 def test_record_extreme_p_values():
   pmm = ParameterManipulatorMixin()
-  pmm.p_values = np.asarray([0.01, 0.99])
+  pmm.p_values = np.asarray([0.01, 0.99, 0.5, 0.5, 0.5])
   pmm.p_objs = []
   pmm.output_dir = PARAM_DICT["output_dir"]
   pmm.iteration_number = 1
@@ -192,9 +196,9 @@ def test_record_extreme_p_values():
 
   pmm.record_extreme_p_values()
 
-  warnings_text_truth = ("WARNING: P value for parameter \"5@1\" > 0.95; iteration 1!\n"
+  warnings_text_truth = ("WARNING: P value for parameter \"t_k_stiff\" > 0.95; iteration 1!\n"
     "\tvalue = 0.99\n"
-    "WARNING: P value for parameter \"3@1\" < 0.05; iteration 1!\n"
+    "WARNING: P value for parameter \"a_k_on\" < 0.05; iteration 1!\n"
     "\tvalue = 0.01\n")
   with open(os.path.join(pmm.output_dir, "WARNINGS.log"), 'r') as f:
     warnings_text_test = f.read()
@@ -209,8 +213,8 @@ def test_setup_parameters():
   pmm.optimization_template_file = PARAM_DICT["optimization_template_file"]
   pmm.setup_parameters()
 
-  p_val_truth = np.asarray([0.85, 0.15])
-  p_value_history_truth = [[0.85], [0.15]]
+  p_val_truth = np.asarray([0.5, 0.5, 0.5, 0.5, 0.5])
+  p_value_history_truth = [[0.5], [0.5], [0.5], [0.5], [0.5]]
   for i in range(len(p_val_truth)):
     assert (pmm.p_values[i] == p_val_truth[i]), ("ParameterManipulatorMixin did not set up p "
       "values correctly!")

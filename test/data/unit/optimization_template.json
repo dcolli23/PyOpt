@@ -1,18 +1,43 @@
 {
-  "kinetics": {
-    "rate_equations": {
-      "3@1": {
-        "min_value": 600,
-        "max_value": 700,
-        "p_value": 0.85,
-        "p_mode": "lin"
-      },
-      "5@1": {
-        "min_value": 50,
-        "max_value": 150,
-        "p_value": 0.15,
-        "p_mode": "lin"
-      }
+  "FiberSim_optimization": {
+    "optimization_structure": {
+      "parameters": [
+        {
+          "name": "a_k_on",
+          "min_value": 2e7,
+          "max_value": 6e7,
+          "p_value": 0.5,
+          "p_mode": "lin"
+        },
+        {
+          "name": "t_k_stiff",
+          "min_value": -15.5,
+          "max_value": -18,
+          "p_value": 0.5,
+          "p_mode": "log"
+        },
+        {
+          "name": "m_kinetics|scheme|1|transition|1|rate_parameters|3",
+          "min_value": 1,
+          "max_value": 10,
+          "p_value": 0.5,
+          "p_mode": "lin"
+        },
+        {
+          "name": "m_kinetics|scheme|2|transition|1|extension",
+          "min_value": 3.0,
+          "max_value": 8.0,
+          "p_value": 0.5,
+          "p_mode": "lin"
+        },
+        {
+          "name": "c_kinetics|scheme|2|transition|1|rate_parameters|1",
+          "min_value": 0,
+          "max_value": 1,
+          "p_value": 0.5,
+          "p_mode": "log"
+        }
+      ]
     }
   }
 }
