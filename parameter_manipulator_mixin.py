@@ -12,7 +12,8 @@ import json
 import numpy as np
 import jgrapht
 
-sys.path.append("../../Models/FiberSim/Python_files/")
+from . import global_defs as gd
+sys.path.append(gd.FIBERSIM_MODULES_ROOT)
 from util import instruct
 
 from .params import ParamObject

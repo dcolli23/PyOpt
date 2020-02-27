@@ -7,10 +7,8 @@ import numpy as np
 
 from ._simulation_base import SimulationBase
 
-print ("WARNING: Currently relying on FiberSim repository outside of this repository. Refactor!!")
-ROOT = os.path.realpath(os.path.dirname(__file__))
-FIBERSIM_MODULES_ROOT = os.path.join(ROOT, "..", "..", "Models", "FiberSim", "Python_files")
-sys.path.append(FIBERSIM_MODULES_ROOT)
+from . import global_defs as gd
+sys.path.append(gd.FIBERSIM_MODULES_ROOT)
 from util import run, instruct, protocol
 
 class SimulationRunner(SimulationBase):

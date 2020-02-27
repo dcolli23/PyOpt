@@ -20,8 +20,8 @@ from . import params
 from .simulation_runner import SimulationRunner
 from .parameter_manipulator_mixin import ParameterManipulatorMixin
 from .simplex_plotter_mixin import SimplexPlotterMixin
-print ("WARNING: Currently relying on FiberSim repository outside of this repository. Refactor!!")
-sys.path.append("../../Models/FiberSim/Python_files/")
+from . import global_defs as gd 
+sys.path.append(gd.FIBERSIM_MODULES_ROOT)
 from util import run, instruct, protocol
 
 class Worker(SimplexPlotterMixin, ParameterManipulatorMixin, SimulationRunner):
